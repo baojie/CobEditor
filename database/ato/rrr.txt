@@ -1,0 +1,786 @@
+61	measurement	38357
+5	trait_name	abdominal fat
+5	trait_desc 	abdominal fat by weight
+5	abbreviat 	ABF
+5	scale_unit 	kg
+6	custom_name	average backfat
+6	trait_desc 	"Average backfat thickness among FRIB, LRIB, and LLUM."
+6	trait_name	backfat (average) thickness
+6	abbreviat 	BFT
+6	scale_unit 	cm
+6	measurement	Ruler
+7	custom_name	average backfat
+7	trait_name	backfat (average) thickness
+7	trait_desc 	"Backfat thickness measured by ultrasound, average of several spots along the spin."
+7	abbreviat 	BFT
+7	scale_unit 	cm
+7	measurement	Ultrasound.
+8	custom_name	average backfat
+8	trait_name	backfat (average) thickness
+8	trait_desc 	Backfat thickness measured by Fat-O-Meater (FOM).
+8	abbreviat 	BFT
+9	trait_name	backfat at first rib
+9	trait_desc 	Backfat thickness
+9	scale_unit 	cm
+9	custom_name	First rib backfat
+9	abbreviat 	FRIBF
+9	measurement	Ruler
+10	abbreviat 	14FRBF
+10	trait_name	backfat at first rib (measured at 14 weeks of age)
+10	trait_desc 	Backfat thickness
+11	abbreviat 	26FRBF
+11	trait_name	backfat at first rib (measured at 26 weeks of age)
+11	trait_desc 	Backfat thickness
+12	trait_name	backfat above muscle dorsi
+12	trait_desc 	Backfat thickness
+12	scale_unit 	cm
+12	measurement	Ruler
+13	trait_desc 	Backfat thickness
+13	trait_name	backfat thickness at last rib
+13	scale_unit 	cm
+13	abbreviat 	LRIBF
+13	measurement	Ruler
+14	trait_name	backfat depth at last rib
+14	abbreviat 	LRIBFD
+15	abbreviat 	14LRIBF
+15	trait_name	backfat at last rib (measured at 14 weeks of age)
+15	trait_desc 	Backfat thickness
+16	abbreviat 	26LRIBF
+16	trait_name	backfat at last rib (measured at 26 weeks of age)
+16	trait_desc 	Backfat thickness
+17	trait_name	backfat at P2 position
+17	trait_desc 	Backfat thickness
+17	scale_unit 	cm
+17	measurement	Ruler
+18	trait_name	backfat at shoulder
+18	trait_desc 	Backfat thickness
+18	abbreviat 	BFSHO
+18	scale_unit 	cm; mm
+18	measurement	Ruler
+19	abbreviat 	10thribBF
+19	trait_name	backfat at tenth rib
+19	trait_desc 	Backfat thickness
+19	scale_unit 	cm; mm
+19	measurement	Ruler
+19	custom_name	Tenth rib backfat
+20	abbreviat 	34ribBF
+20	trait_name	backfat between 3th and 4th rib
+20	trait_desc 	Backfat thickness
+20	scale_unit 	cm; mm
+20	measurement	Ruler
+21	abbreviat 	67ribBF
+21	trait_name	backfat between 6th and 7th rib
+22	trait_name	backfat depth at max. mus. depth
+22	trait_desc 	Backfat thickness
+22	scale_unit 	cm; mm
+22	measurement	Ruler
+23	trait_name	backfat at last lumbar
+23	trait_desc 	Backfat thickness
+23	scale_unit 	cm; mm
+23	custom_name	Lumbar back fat
+23	abbreviat 	LUMBF
+23	measurement	Ruler
+24	trait_name	backfat between the last 3th and 4th lumbar
+24	abbreviat 	LUMBF
+25	abbreviat 	14LUMBF
+25	trait_name	backfat at last lumbar (measured at 14 weeks of age)
+25	trait_desc 	Backfat thickness
+26	abbreviat 	26LUMBF
+26	trait_name	backfat at last lumbar (measured at 26 weeks of age)
+26	trait_desc 	Backfat thickness
+27	trait_name	backfat at rump
+27	trait_desc 	Backfat thickness
+27	abbreviat 	BFTR
+27	custom_name	Rear backfat (RBT)
+28	trait_name	backfat middle
+28	trait_desc 	Backfat thickness at the mid-point of the body length.
+28	abbreviat 	BFM
+28	scale_unit 	cm; mm
+28	measurement	Ruler
+29	trait_name	backfat side
+29	trait_desc 	Backfat thickness
+29	abbreviat 	BFS
+29	scale_unit 	cm; mm
+29	measurement	Ruler
+30	trait_name	backfat (13 weeks of age)
+30	trait_desc 	Backfat thickness
+30	abbreviat 	BF13w
+30	measurement	Ruler
+31	trait_name	backfat (17 weeks of age)
+31	trait_desc 	Backfat thickness
+31	abbreviat 	BF17w
+31	measurement	Ruler
+32	trait_name	backfat (22 weeks of age)
+32	trait_desc 	Backfat thickness
+32	abbreviat 	BF22w
+32	measurement	Ruler
+33	trait_name	backfat (40 kg live weight)
+33	trait_desc 	Backfat thickness
+33	abbreviat 	BF40k
+33	measurement	Ruler
+34	trait_name	backfat (60 kg live weight)
+34	trait_desc 	Backfat thickness
+34	abbreviat 	BF60k
+34	measurement	Ruler
+35	scale_unit 	%
+35	trait_name	fat percentage in carcass
+36	trait_name	fat area
+37	trait_name	fat weight (total)
+37	abbreviat 	FW
+38	scale_unit 	g
+38	abbreviat 	IMF
+38	trait_name	intermuscular fat weight
+39	scale_unit 	%
+39	abbreviat 	IMF
+39	custom_name	intramuscular fat content
+39	trait_name	intramuscular fat percentage
+40	trait_name	backfat weight
+40	abbreviat 	BFW
+40	custom_name	BFW
+40	scale_unit 	kg
+41	scale_unit 	kg
+41	trait_name	leaf fat weight
+41	abbreviat 	LFW
+42	trait_name	leaf fat percentage
+42	trait_desc 	leaf fat to carcass percent by weight
+42	abbreviat 	LFP
+43	abbreviat 	CFW
+43	trait_name	intestinal fat weight
+44	abbreviat 	CFP
+44	trait_name	intestinal fat percent
+44	trait_desc 	intestinal fat to carcass percent by weight
+45	abbreviat 	IFR
+45	trait_name	internal fat ratio
+46	trait_name	fat ratio (percentage)
+46	abbreviat 	FP
+47	scale_unit 	%
+47	abbreviat 	BLFATP
+47	trait_name	Percentage of backfat and leaf fat in carcass
+47	trait_desc 	Sum of subcutaenous body fat and internal fat expressed as percentage of carcass weight.
+48	abbreviat 	MARB
+48	trait_name	marbling
+48	scale_unit 	score
+48	trait_desc 	Small visible streaks of fat within a meat cut.
+49	trait_name	residual fatty acids
+50	trait_name	side fat
+51	scale_unit 	mm
+51	custom_name	SUBCFAT
+51	trait_name	subcutaneous fat depth
+52	trait_name	subcutaneous fat weight
+53	trait_name	sum of all fatty acids
+54	scale_unit 	%
+54	trait_name	total lipid
+55	trait_name	color a
+55	abbreviat 	mcolor
+55	trait_desc 	Objective color variable measured by colorimeter: Redness
+56	trait_name	color b
+56	abbreviat 	mcolor
+56	trait_desc 	Objective color variable measured by colorimeter: Yelowness
+57	trait_name	color L
+57	abbreviat 	mcolor
+57	trait_desc 	Objective color variable measured by colorimeter: Lightness
+58	trait_name	hue
+58	abbreviat 	mcolor
+59	abbreviat 	mcolor
+59	trait_name	meat brightness
+60	trait_name	light reflection
+60	abbreviat 	mcolor
+60	custom_name	Reflectance value
+60	trait_desc 	"Various reflectance values are used to measure meat color, to quantitate myoglobin forms. It closely relates to what the eye and brain see."
+61	trait_name	color score
+61	abbreviat 	mcolor
+61	trait_desc 	Objective scores.
+61	scale_unit 	score
+62	custom_name	Hematin
+62	trait_name	Hematin pigmentation
+62	abbreviat 	mcolor
+62	trait_desc 	Pigment content in meat.
+62	scale_unit 	ug/g
+63	abbreviat 	pH
+63	trait_name	pH 24 hours post mortem (loin)
+64	abbreviat 	pH
+64	trait_name	pH 24 hours post mortem (ham)
+65	abbreviat 	pH
+65	trait_name	pH 45 minutes post mortem
+66	abbreviat 	pH
+66	trait_name	pH for Biceps Femoris
+67	abbreviat 	pH
+67	trait_name	pH for Semispinalis Dorsi
+68	abbreviat 	pH
+68	trait_name	pH for Longissmus Dorsi
+69	trait_name	conductivity 45 minutes post mortem
+70	trait_name	conductivity 24 hours post mortem
+71	abbreviat 	CK test
+71	trait_name	Creatine-phospho-kinase test
+72	trait_desc 	A process in which meat becomes rigid post mortum.
+72	abbreviat 	rigor
+72	trait_name	Rigor mortis
+73	trait_name	average instron (star probe) force
+73	scale_unit 	Kg
+74	trait_name	chew score
+74	measurement	Objective scores.
+75	scale_unit 	%
+75	trait_name	cooking loss
+76	trait_name	drip loss
+76	abbreviat 	dripl
+76	trait_desc 	Water holding capacity predicted through drip loss in the longissimus muscle during 48 h. (%)
+77	trait_desc 	Fiber number on longgissimus dorsi between 13/14 ribs.
+77	trait_name	Number of white fibers
+77	abbreviat 	numfib
+78	trait_desc 	Fiber percentage on longgissimus dorsi between 13/14 ribs.
+78	trait_name	Percentage of white fibers
+78	abbreviat 	percfiber
+79	abbreviat 	dfiber
+79	trait_name	Diameter of white fibers
+79	trait_desc 	Fiber diameter on longgissimus dorsi between 13/14 ribs.
+80	trait_desc 	R value is defined as the reflectance R8 of a meat sample so thick that further increases in thickness fail to change the reflectance; it describes the degree of desamination of adenosine
+80	trait_name	R-value
+80	abbreviat 	r-value
+81	abbreviat 	rdr
+81	trait_name	R-value / Diameter of white fibers
+82	trait_name	Lactate / Diameter of white fibers
+82	abbreviat 	ldr
+83	trait_name	fiber type 1
+84	trait_name	fiber type 2 ratio
+85	trait_name	firmness
+86	trait_name	percent cooking loss
+87	trait_name	shear force
+88	measurement	Objective scores.
+88	trait_name	tenderness score
+89	scale_unit 	g
+89	trait_desc 	"The ability of meat to retain its water during cutting, grinding, heating, pressing, etc"
+89	trait_name	water holding capacity
+89	abbreviat 	WHC
+90	abbreviat 	moist
+90	trait_name	Moisture Content
+91	trait_name	"androstenone, laboratory"
+92	trait_name	average glycogen
+92	abbreviat 	GLY
+92	measurement	mmol/g
+92	scale_unit 	umol/g
+93	trait_name	average glycolytic potential
+93	abbreviat 	GLYPO
+93	measurement	mmol/g
+93	scale_unit 	umol/g
+94	trait_name	average lactate
+94	abbreviat 	LACT
+94	measurement	mmol/g
+94	scale_unit 	umol/g
+95	trait_desc 	Blood cholesterol concentration
+95	trait_name	cholesterol
+95	scale_unit 	mg/dl
+96	trait_name	"indole, laboratory"
+97	trait_name	muscle moisture percentage
+98	trait_name	muscle protein percentage
+99	trait_name	pork flavour in fat
+100	trait_name	pork flavour in lean
+101	trait_name	"skatole, laboratory"
+102	trait_name	"androstenone, taste panel"
+103	trait_name	"skatole, taste panel"
+104	trait_name	subjective abnormal flavour in fat
+105	trait_name	subjective abnormal flavour in lean
+106	trait_name	subjective boar flavor in fat
+107	trait_name	subjective boar flavor in lean
+108	measurement	Objective scores.
+108	trait_name	subjective chew score
+109	measurement	Objective scores.
+109	trait_name	subjective flavor score
+110	measurement	Objective scores.
+110	trait_name	subjective juiciness score
+111	trait_name	subjective pork flavor in fat
+112	trait_name	subjective pork flavor in lean
+113	measurement	Objective scores.
+113	trait_name	subjective tenderness score
+114	trait_desc 	Any flavor that is not associated with normal pork flavor.
+114	measurement	Objective scores.
+114	custom_name	off-flavor
+114	trait_name	subjective off-flavor score
+115	trait_name	intensity taste
+115	abbreviat 	itaste
+116	trait_name	subjective abnormal odor
+117	trait_name	subjective overall acceptibility score
+118	trait_name	subjective pork odour
+119	abbreviat 	ISMEL
+119	trait_name	smell intensity
+120	abbreviat 	ISMELF
+120	trait_name	smell intensity - fat
+121	abbreviat 	SASML
+121	trait_name	Sub-acid smell
+122	scale_unit 	%
+122	abbreviat 	BMI
+122	trait_desc 	BMI = weight at slaughter / carcass length
+122	trait_name	body mass index
+123	trait_name	bone weight
+124	trait_name	bone percent
+124	abbreviat 	BP
+125	scale_unit 	%
+125	abbreviat 	BLR
+125	trait_name	bone/lean meat ratio in ham
+126	scale_unit 	%
+126	abbreviat 	LBp
+126	trait_name	Lean meat + bone in ham + back
+127	scale_unit 	kg
+127	trait_name	Lean mass (weight)
+127	abbreviat 	leanwt
+128	scale_unit 	%
+128	abbreviat 	Lbpback
+128	trait_name	Lean meat + bone in back
+129	scale_unit 	%
+129	trait_name	Backfat percentage
+129	abbreviat 	BFP
+130	scale_unit 	%
+130	trait_desc 	carcass fat percentage
+130	abbreviat 	FATCP
+130	trait_name	Fat-cut percentage
+131	trait_name	belly weight
+131	abbreviat 	bellywt
+132	trait_desc 	= 4belly weight / carcass weight
+132	trait_name	belly percentage
+132	abbreviat 	bellyp
+133	trait_name	carcass length
+133	scale_unit 	cm
+133	abbreviat 	crcl
+133	measurement	crcl
+134	trait_name	carcass weight (cold)
+134	abbreviat 	CCWT
+135	trait_name	Carcass yield
+135	abbreviat 	CYIELD
+136	trait_name	carcass fat free weight
+136	abbreviat 	CWNOFAT
+137	custom_name	HCWT
+137	trait_name	hot carcass weight
+138	scale_unit 	%
+138	measurement	Carcass Weight / Live Weight X 100
+138	abbreviat 	dressing
+138	custom_name	dressing
+138	trait_name	dressing percentage
+138	trait_desc 	The percentage of the live animal that ends up as carcass
+139	trait_name	diaphragm weight
+140	trait_desc 	Between the 3rd and 4th rib
+140	trait_name	eye muscle depth
+141	trait_name	Feet weight
+141	abbreviat 	feetwt
+142	trait_name	foreloin weight post-dissection
+143	trait_name	foreloin weight pre-dissection
+144	trait_name	head weight
+144	abbreviat 	headwt
+145	scale_unit 	%
+145	trait_name	lean percentage
+145	abbreviat 	leanp
+145	custom_name	Meat percentage
+146	scale_unit 	%
+146	trait_name	ham percent
+146	abbreviat 	hamp
+147	trait_name	lean thickness between 3th and 4th rib
+148	scale_unit 	(cm) square
+148	abbreviat 	LEA
+148	trait_name	loin eye area
+148	measurement	loineyea
+148	custom_name	longissmus muscle area
+149	abbreviat 	loinlength
+149	trait_name	Longissimus muscle length
+150	trait_name	muscle + diaphragm weight
+151	abbreviat 	leanwt
+151	trait_name	muscle weight
+152	scale_unit 	kg
+152	trait_name	Loin weight
+152	abbreviat 	loinwt
+153	scale_unit 	%
+153	trait_name	Loin percent
+153	abbreviat 	loinp
+154	trait_name	Ham weight
+154	abbreviat 	hamwt
+154	scale_unit 	kg
+155	scale_unit 	%
+155	abbreviat 	ECLC
+155	measurement	ECLC =-3 .539 +75 .1 (proportion of ham) +121.6 (proportion of loin) -61 (proportion of backfat) -45.3 (proportion of leaf fat) +32.8 (proportion of belly)
+155	trait_name	Estimated carcass lean content
+155	custom_name	lean content
+156	scale_unit 	%
+156	custom_name	lean percentage
+156	abbreviat 	LHP
+156	trait_name	Loin and ham percentage in carcass
+156	trait_desc 	Percentage portion of Loin and Ham weight over carcass weight
+157	scale_unit 	kg
+157	trait_name	Shoulder weight
+157	abbreviat 	SHOUWT
+158	abbreviat 	Lmdepth
+158	custom_name	loin height
+158	trait_name	Loin muscle depth
+158	scale_unit 	mm
+158	measurement	Usually ultrasound; at the last ribs.
+159	abbreviat 	LBCUT
+159	trait_name	Loin and belly cut
+160	trait_name	skin weight
+160	abbreviat 	SW
+161	trait_name	skin percentage
+161	abbreviat 	SP
+162	trait_name	skin thickness
+162	trait_desc 	"Skin thickness on the back, at the mid-point of body length."
+163	trait_name	Trimmed whole-sale product / live weight
+163	trait_desc 	Trimmed whole-sale product adjusted to a constant live weight
+163	custom_name	twplwt
+164	trait_name	Trimmed whole-sale product / carcass weight
+164	trait_desc 	Trimmed whole-sale product adjusted to a constant carcass weight
+164	custom_name	twpcwt
+165	trait_name	Heart weight
+165	abbreviat 	HWT
+165	scale_unit 	kg
+166	trait_desc 	androstenone level measured at slaughter
+166	abbreviat 	FANDRO
+166	trait_name	fat androstenone level
+167	abbreviat 	100FANDRO
+167	trait_name	fat androstenone level at 100 days of age
+168	abbreviat 	120FANDRO
+168	trait_name	fat androstenone level at 120 days of age
+169	abbreviat 	140FANDRO
+169	trait_name	fat androstenone level at 140 days of age
+170	abbreviat 	160FANDRO
+170	trait_name	fat androstenone level at 160 days of age
+171	scale_unit 	%
+171	abbreviat 	FA-C18:2
+171	custom_name	Fatty acid composition
+171	trait_name	Linoleic acid percentage
+171	trait_desc 	Measured in backfat
+172	scale_unit 	%
+172	custom_name	Fatty acid composition
+172	trait_name	heptadecanoic acid percentage
+172	trait_desc 	Measured in backfat
+173	scale_unit 	%
+173	abbreviat 	FA-C18:3
+173	custom_name	Fatty acid composition
+173	trait_name	Linolenic acid percentage
+173	trait_desc 	Measured in backfat
+174	scale_unit 	%
+174	abbreviat 	FA-C14:0
+174	custom_name	Fatty acid composition
+174	trait_desc 	Measured in backfat
+174	trait_name	Myristic acid percentage
+175	scale_unit 	%
+175	abbreviat 	FA-C16:0
+175	custom_name	Fatty acid composition
+175	trait_desc 	Measured in backfat
+175	trait_name	Palmitic acid percentage
+176	scale_unit 	%
+176	abbreviat 	FA-C16:1
+176	custom_name	Fatty acid composition
+176	trait_desc 	Measured in backfat
+176	trait_name	Palmitoleic acid percentage
+177	abbreviat 	FA-C17:0
+177	custom_name	Fatty acid composition
+177	trait_name	Heptadecanoic acid percentage
+177	trait_desc 	Measured in backfat
+178	scale_unit 	%
+178	abbreviat 	FA-C18:0
+178	custom_name	Fatty acid composition
+178	trait_desc 	Measured in backfat
+178	trait_name	Stearic acid percentage
+179	scale_unit 	%
+179	abbreviat 	FA-C18:1n-9
+179	custom_name	Fatty acid composition
+179	trait_desc 	Measured in backfat
+179	trait_name	Oleic acid percentage
+180	scale_unit 	%
+180	trait_name	7-Octadecenoic acid percentage
+180	abbreviat 	FA-C18:1n-7
+180	custom_name	Fatty acid composition
+180	trait_desc 	Measured in backfat
+181	scale_unit 	%
+181	trait_name	Eicosenoic acid percentage
+181	abbreviat 	FA-C20:1
+181	custom_name	Fatty acid composition
+181	trait_desc 	Measured in backfat
+182	scale_unit 	%
+182	trait_name	Eicosadienoic acid percentage
+182	abbreviat 	FA-C20:2
+182	custom_name	Fatty acid composition
+182	trait_desc 	Measured in backfat
+183	trait_name	Average chain length
+183	abbreviat 	FA-ACL
+184	trait_name	Double-bond index
+184	abbreviat 	FA-DBI
+185	abbreviat 	FA-UI
+185	trait_name	Unsaturated index
+186	abbreviat 	FA-PI
+186	trait_name	Peroxidability index
+187	trait_name	Salmonella count in feces day 1 post infection
+188	trait_name	Salmonella count in feces day 7 post infection
+189	custom_name	''
+189	trait_desc 	''
+189	measurement	''
+189	scale_unit 	''
+189	trait_name	Salmonella count in liver
+189	abbreviat 	SCL
+190	trait_name	Salmonella count in spleen
+191	trait_desc 	Count of white blood cells
+191	scale_unit 	cpm
+191	trait_name	number of leucocytes
+191	abbreviat 	WBC
+191	custom_name	White blood cells
+191	measurement	With cello-scope
+192	scale_unit 	cpm
+192	trait_name	mitogen-induced proliferation
+193	scale_unit 	cpm
+193	abbreviat 	PWM
+193	trait_name	PWM-induced proliferation
+194	abbreviat 	conA
+194	trait_name	conA-induced proliferation
+194	scale_unit 	cpm
+195	scale_unit 	cpm
+195	abbreviat 	spont
+195	trait_name	spontenous proliferation
+196	trait_name	pre/post-vaccination levels of IgG to K88 antigen
+197	trait_name	specific IgG response to E. coli O149 antigen
+198	trait_name	post-stress mitogen induced IL-2 activity
+199	trait_name	stress induced neutrophils numbers alteration
+200	trait_name	stress induced leukocyte proliferation.
+201	abbreviat 	K88R
+201	trait_name	resistance to E.coli K88 infection
+202	trait_name	Anti-K88 E.coli IgG levels
+202	abbreviat 	K88Ab
+202	trait_desc 	Natural IgG Ab levels against K88 E.coli
+203	abbreviat 	0149Ab
+203	trait_name	Anti-O149 E.coli IgG levels
+203	trait_desc 	Natural IgG Ab levels against O149 E.coli
+204	abbreviat 	0149AbR
+204	trait_name	Anti-O149 E.coli IgG level response
+204	trait_desc 	IgG response to O149 E.coli
+205	abbreviat 	ECF18R
+205	trait_name	Small intestinal Escherichia coli F18 receptor
+206	trait_name	resistance to psuedorabies virus infection
+207	trait_name	ACTH basal level
+207	abbreviat 	ACTH1
+207	trait_desc 	Basal Adrenocorticotropic Hormone (ACTH) levels
+207	measurement	from EDTH treated blood
+207	scale_unit 	pg/ml
+208	trait_name	ACTH response to stress
+208	abbreviat 	ACTH2
+208	measurement	from EDTH treated blood
+208	scale_unit 	pg/ml
+208	trait_desc 	Post stress Adrenocorticotropic Hormone (ACTH) levels
+209	trait_name	ACTH response to stress
+209	trait_desc 	Adrenocorticotropic Hormone (ACTH) variations
+209	abbreviat 	dACTH
+209	measurement	from EDTH treated blood
+209	scale_unit 	pg/ml
+210	trait_name	Basal cortisol levels
+210	trait_desc 	Basal cortisol levels
+210	abbreviat 	CORT1
+210	measurement	from EDTH treated blood
+210	scale_unit 	pg/ml
+211	abbreviat 	CORT2
+211	measurement	from EDTH treated blood
+211	scale_unit 	pg/ml
+211	trait_desc 	Post stress cortisol levels
+211	trait_name	post-stress cortisol levels
+212	trait_desc 	Cortisol level variations
+212	abbreviat 	dCORT
+212	measurement	from EDTH treated blood
+212	scale_unit 	g/ml
+212	trait_name	post-stress cortisol levels
+213	trait_name	Basal glucose levels
+213	measurement	from EDTH treated blood
+213	scale_unit 	g/ml
+213	abbreviat 	GLU1
+213	custom_name	Glycemia
+214	measurement	from EDTH treated blood
+214	scale_unit 	g/ml
+214	abbreviat 	GLU2
+214	trait_name	Glucose level response to stress
+214	custom_name	Glycemia
+215	abbreviat 	dGLU
+215	measurement	from EDTH treated blood
+215	scale_unit 	g/ml
+215	trait_name	Glucose level variations
+215	custom_name	Glycemia
+216	abbreviat 	LOC
+216	trait_name	Locomotion
+216	trait_desc 	Number of test areana sections entered during stress.
+217	abbreviat 	EXPL
+217	trait_name	Exploration
+217	trait_desc 	"Time spent rooting, sniffing the floor or the sides of the test arena during test period."
+218	trait_name	neuroendocrine responses
+219	trait_name	black vs white color
+219	abbreviat 	CC
+220	abbreviat 	CC
+220	trait_name	spots
+221	trait_name	body length
+222	trait_name	thoracic vertebra number
+222	abbreviat 	tvnum
+223	trait_desc 	sum of thoracic and lumbar vertebra numbers.
+223	trait_name	total vertebra number
+223	abbreviat 	vnum
+224	scale_unit 	cm
+224	custom_name	Distance between spine bones.
+224	abbreviat 	vdist
+224	trait_name	vertebra distance
+225	trait_name	claws length front inside
+226	trait_name	claws length front outside
+227	trait_name	claws length hind inside
+228	trait_name	claws length hind outside
+229	trait_name	feet and legs score
+229	measurement	Objective scores.
+230	trait_name	feet score front
+231	trait_name	feet score rear
+232	trait_name	hair (amount)
+233	trait_name	height
+234	trait_name	joint abnormalities
+235	trait_name	joint leasions
+236	trait_name	leg length
+237	trait_name	leg pastern front
+238	trait_name	leg pastern hind
+239	trait_name	leg score front
+240	trait_name	leg score hind
+241	trait_name	leg set view
+242	trait_name	leg torsion front
+243	trait_name	leg torsion hind
+244	trait_name	legs angularity front
+245	trait_name	legs angularity hind
+246	abbreviat 	ccannon
+246	trait_name	Circumference of cannon bone
+247	trait_name	femur dimensions
+248	trait_name	osteochondrosis
+249	trait_name	lob ear
+250	trait_name	nose score
+250	measurement	Objective scores.
+251	trait_name	swelling of joints
+252	trait_name	longevity (sow)
+253	trait_name	scrotal hernia
+254	trait_name	rhinitis
+255	trait_name	feed intake 35 to 55 kg
+255	scale_unit 	kg/day
+256	trait_name	feed intake 55 to 80 kg
+256	scale_unit 	kg/day
+257	scale_unit 	cm
+257	trait_name	length of small intestine
+257	abbreviat 	LSI
+258	abbreviat 	ADG
+258	trait_name	average daily gain
+258	scale_unit 	kg/day
+259	abbreviat 	ADG
+259	trait_desc 	"ADG during grower"" period."""
+259	trait_name	average daily gain 35 to 55 kg
+259	scale_unit 	kg/day
+260	abbreviat 	ADG
+260	trait_desc 	"ADG during finishing"" period."""
+260	trait_name	average daily gain 55 to 80 kg
+260	scale_unit 	kg/day
+261	abbreviat 	ADG
+261	trait_name	average daily gain weaning to 25 kg
+261	trait_desc 	Early ADG from weaning (5.5kg) to 25 kg (nursery).
+261	custom_name	EGR
+261	scale_unit 	g/day
+262	abbreviat 	ADG
+262	trait_desc 	ADG during nursery and growing period (between weaning and slaughter).
+262	trait_name	average daily gain weaning to 55 kg
+263	abbreviat 	ADG
+263	trait_name	average daily gain 25 to 90 kg
+263	scale_unit 	g/day
+263	trait_desc 	Test ADG from 25 kg to 90 kg.
+263	custom_name	TGR
+264	abbreviat 	ADG
+264	trait_name	average daily gain during the entire life.
+264	scale_unit 	g/day
+264	custom_name	LGR
+264	trait_desc 	Life time growth ADG.
+265	abbreviat 	ADG
+265	trait_desc 	ADG during Birth to finishing (55 kg)
+265	trait_name	average daily gain birth to end of test
+265	scale_unit 	kg/day
+266	abbreviat 	ADG
+266	trait_name	average daily gain birth to 30 kg
+267	abbreviat 	ADG
+267	trait_name	average daily gain birth to 70 kg
+268	abbreviat 	ADG
+268	trait_desc 	average daily gain birth to weaning (5.5kg)
+268	trait_name	average daily gain on weaning
+268	scale_unit 	kg/day
+269	abbreviat 	ADG
+269	trait_desc 	"average daily gain during the test period""."""
+269	trait_name	average daily gain on test
+269	scale_unit 	kg/day
+270	abbreviat 	ADG
+270	trait_desc 	ADG during birth to weaning
+270	trait_name	average daily gain (birth to 3 weeks)
+271	abbreviat 	ADG
+271	trait_name	average daily gain (3 to 5 weeks)
+272	abbreviat 	ADG
+272	trait_name	average daily gain (5 to 7 weeks)
+273	abbreviat 	ADG
+273	trait_name	average daily gain (7 to 9 weeks)
+274	abbreviat 	ADG
+274	trait_desc 	ADG during Nursery period
+274	trait_name	average daily gain (3-10 weeks)
+275	abbreviat 	ADG
+275	trait_desc 	ADG during Growing period
+275	trait_name	average daily gain (4-13 weeks)
+276	abbreviat 	ADG
+276	trait_desc 	ADG during Finishing period
+276	trait_name	average daily gain (10-22 weeks)
+276	custom_name	fattening ADG
+277	abbreviat 	ADG; EDG
+277	trait_name	average daily gain (8-18 weeks)
+278	abbreviat 	ADG; LDG
+278	trait_name	average daily gain (18-26 weeks)
+279	abbreviat 	ADG
+279	trait_name	average daily gain (birth-60 days)
+280	abbreviat 	ADG
+280	trait_name	average daily gain (60-160 days)
+281	custom_name	Birth weight
+281	trait_name	body weight at birth
+281	abbreviat 	BWt
+281	trait_desc 	Measured live
+282	trait_name	body weight at slaughter
+282	abbreviat 	endWT
+282	trait_desc 	Measured live
+283	trait_name	Age at slaughter
+283	abbreviat 	endage
+284	abbreviat 	16dWt
+284	trait_name	body weight at 16 days
+284	trait_desc 	Measured live
+285	abbreviat 	21dWt
+285	trait_name	body weight at 3 weeks of age
+285	trait_desc 	Measured live
+286	trait_name	body weight at weaning
+286	trait_desc 	pigs are normally weaned at 42 days of age.
+286	custom_name	weaning weight
+286	abbreviat 	WWT
+287	trait_name	body weight at 4 weeks of age
+287	abbreviat 	Wt
+288	trait_name	body weight at 8 weeks of age
+288	abbreviat 	Wt
+289	trait_name	body weight at 10 weeks of age
+289	trait_desc 	Measured live
+289	abbreviat 	Wt
+290	trait_name	body weight at 13 weeks of age
+290	trait_desc 	Measured live
+290	abbreviat 	Wt
+291	trait_name	body weight at 17 weeks of age
+291	trait_desc 	Measured live
+291	abbreviat 	Wt
+292	trait_name	body weight at 22 weeks of age
+292	trait_desc 	Measured live
+292	abbreviat 	Wt
+293	trait_name	body weight at 25 weeks of age
+293	custom_name	Live weight
+293	trait_desc 	Measured live
+293	abbreviat 	Wt
+294	trait_name	body weight at 26 weeks of age
+294	custom_name	Finishing weight
+294	trait_desc 	Measured live
+294	abbreviat 	Wt
+295	trait_name	body weight at 60 days of age
+295	abbreviat 	Wt
+296	trait_name	feed conversion ratio
+297	trait_name	feed conversion ratio 35 to 55 kg
+298	trait_name	feed conversion ratio 55 to 80 kg
+299	custom_name	Litter size
+299	abbreviat 	LS
+299	trait_name	total number born
+300	abbreviat 	NBL
+300	custom_name	prenatal survival
+300	trait_name	total number born alive
+301	trait_name	fully formed pigs
+301	abbreviat 	NFF
+316	abbreviat 	FSH
+316	trait_name	Plasma FSH concentration

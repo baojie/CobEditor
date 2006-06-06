@@ -1,0 +1,15 @@
+[PropertyInfo]
+comment,Object,false,false, , ,true,<default>
+expanded,boolean,false,false, , ,false,<default>
+localName,String,false,false, , ,true,<default>
+obsoleteNodes,edu.iastate.ato.tree.MetaTreeNode,false,false, , ,false,<default>
+oid,String,false,false, , ,true,<default>
+termNumber,int,false,false, , ,false,<default>
+thisPackage,edu.iastate.ato.po.DbPackage,false,false, , ,false,<default>
+userObject,Object,false,false, , ,true,<default>
+viewMode,String,false,false, , ,true,<default>
+[IconNames]
+
+
+
+

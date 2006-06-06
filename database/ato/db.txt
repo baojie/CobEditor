@@ -1,0 +1,149 @@
+
+-----------------------------------------------------------------------
+--                Part 0 Build all tables                             -
+-----------------------------------------------------------------------
+
+CREATE TABLE auto_id
+(
+  id serial NOT NULL,
+  term_oid varchar(255),
+  CONSTRAINT auto_id_pkey PRIMARY KEY (id)
+) 
+WITHOUT OIDS;
+ALTER TABLE auto_id OWNER TO ato;
+
+
+CREATE TABLE details
+(
+  term varchar(255),
+  attribute varchar(255),
+  value text,
+  author varchar(255),
+  modified varchar(32)
+) 
+WITHOUT OIDS;
+ALTER TABLE details OWNER TO ato;
+COMMENT ON COLUMN details.term IS 'term oid';
+
+CREATE TABLE editing
+(
+  package varchar(256),
+  usr varchar(256)
+) 
+WITHOUT OIDS;
+ALTER TABLE editing OWNER TO ato;
+GRANT ALL ON TABLE editing TO ato;
+COMMENT ON COLUMN editing.package IS 'package oid';
+
+
+CREATE TABLE online
+(
+  user_id varchar(256) NOT NULL,
+  host varchar(32) NOT NULL,
+  port varchar(8) NOT NULL,
+  login_time varchar(32) NOT NULL
+) 
+WITH OIDS;
+ALTER TABLE online OWNER TO ato;
+COMMENT ON TABLE online IS 'Who it online';
+
+CREATE TABLE package
+(
+  pid varchar(255) NOT NULL,
+  "comment" varchar(256),
+  author varchar(255),
+  modified varchar(32),
+  CONSTRAINT package_pkey PRIMARY KEY (pid)
+) 
+WITH OIDS;
+ALTER TABLE package OWNER TO ato;
+
+CREATE TABLE pkg_relation
+(
+  p1 varchar(255) NOT NULL,
+  relation varchar(255) NOT NULL,
+  p2 varchar(255) NOT NULL,
+  author varchar(256),
+  modified varchar(32),
+  CONSTRAINT pkg_relation_pkey PRIMARY KEY (p1, relation, p2)
+) 
+WITHOUT OIDS;
+ALTER TABLE pkg_relation OWNER TO ato;
+
+
+CREATE TABLE privilege
+(
+  package_oid varchar(32) NOT NULL,
+  user_id varchar(255) NOT NULL,
+  rights varchar(8) NOT NULL,
+  CONSTRAINT privilege_pkey PRIMARY KEY (package_oid, user_id, rights)
+) 
+WITH OIDS;
+ALTER TABLE privilege OWNER TO ato;
+
+CREATE TABLE relation
+(
+  id varchar(255) NOT NULL,
+  pid varchar(255) NOT NULL,
+  relation varchar(255) NOT NULL,
+  author varchar(256),
+  modified varchar(32)
+) 
+WITH OIDS;
+ALTER TABLE relation OWNER TO ato;
+COMMENT ON COLUMN relation.id IS 'the child term oid
+';
+COMMENT ON COLUMN relation.pid IS 'the parent term oid';
+
+CREATE TABLE "schema"
+(
+  "type" varchar(32) NOT NULL,
+  name varchar(256) NOT NULL,
+  CONSTRAINT schema_pkey PRIMARY KEY ("type", name)
+) 
+WITHOUT OIDS;
+ALTER TABLE "schema" OWNER TO ato;
+
+
+CREATE TABLE term
+(
+  id varchar(255) NOT NULL,
+  name varchar(255),
+  package varchar(255),
+  slm varchar(10),
+  author varchar(256),
+  modified varchar,
+  is_obsolete varchar(5) DEFAULT 'false'::character varying,
+  CONSTRAINT term_pkey PRIMARY KEY (id)
+) 
+WITH OIDS;
+ALTER TABLE term OWNER TO ato;
+
+CREATE TABLE users
+(
+  id varchar(255) NOT NULL,
+  role varchar(32) NOT NULL,
+  name varchar(255),
+  institution varchar(255),
+  email varchar(32) NOT NULL,
+  pass varchar(32) NOT NULL,
+  create_date varchar(32),
+  CONSTRAINT user_pkey PRIMARY KEY (id)
+) 
+WITHOUT OIDS;
+ALTER TABLE users OWNER TO ato;
+GRANT ALL ON TABLE users TO ato;
+
+----------------------------
+
+INSERT INTO users (id, role, name, email, pass) VALUES ('guest','guest','guest','null', 'guest');
+INSERT INTO users (id, role, name, email, pass) VALUES ('admin','admin','admin','null', 'admin');
+INSERT INTO package (pid) VALUES ('Global');
+INSERT INTO schema (type, name) VALUES ( 'naming-policy', 'Basic Naming Policy') ;
+INSERT INTO schema (type, name) VALUES ( 'partial-order', 'is_a');
+INSERT INTO schema (type, name) VALUES ( 'term-property', 'trait_name');
+INSERT INTO schema (type, name) VALUES ( 'term-property', 'abbreviat');
+INSERT INTO schema (type, name) VALUES ( 'term-property', 'custom_name');
+INSERT INTO schema (type, name) VALUES ( 'term-property', 'trait_desc');
+INSERT INTO schema (type, name) VALUES ( 'term-property', 'measurement');
+INSERT INTO schema (type, name) VALUES ( 'term-property', 'scale_unit');

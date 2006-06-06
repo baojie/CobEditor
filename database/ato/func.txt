@@ -1,0 +1,97 @@
+CREATE OR REPLACE FUNCTION bj_sub_pkg("varchar", "varchar")
+  RETURNS SETOF pkg_relation AS
+$BODY$
+
+DECLARE 
+   _row      pkg_relation%ROWTYPE;
+   _id       ALIAS FOR $1;
+   _relation ALIAS FOR $2;
+
+BEGIN
+
+    SELECT INTO _row * FROM pkg_relation WHERE p2 = _id;
+
+    WHILE FOUND LOOP
+        RETURN NEXT _row;
+        SELECT INTO _row * FROM pkg_relation WHERE p2 = _row.p1 and relation = _relation;
+    END LOOP;
+    RETURN;
+END
+
+$BODY$
+  LANGUAGE 'plpgsql' VOLATILE;
+ALTER FUNCTION bj_sub_pkg("varchar", "varchar") OWNER TO ato;
+
+CREATE OR REPLACE FUNCTION bj_sub_term("varchar", "varchar")
+  RETURNS SETOF relation AS
+$BODY$
+
+DECLARE 
+   _row      relation%ROWTYPE;
+   _id       ALIAS FOR $1;
+   _relation ALIAS FOR $2;
+
+BEGIN
+
+    SELECT INTO _row * FROM relation WHERE pid = _id;
+
+    WHILE FOUND LOOP
+        RETURN NEXT _row;
+        SELECT INTO _row * FROM relation 
+        WHERE pid = _row.id and relation = _relation;
+    END LOOP;
+    RETURN;
+END
+
+$BODY$
+  LANGUAGE 'plpgsql' VOLATILE;
+ALTER FUNCTION bj_sub_term("varchar", "varchar") OWNER TO ato;
+
+CREATE OR REPLACE FUNCTION bj_super_pkg("varchar", "varchar")
+  RETURNS SETOF pkg_relation AS
+$BODY$
+
+DECLARE 
+   _row      pkg_relation%ROWTYPE;
+   _id       ALIAS FOR $1;
+   _relation ALIAS FOR $2;
+
+BEGIN
+
+    SELECT INTO _row * FROM pkg_relation WHERE p1 = _id;
+
+    WHILE  FOUND LOOP
+        RETURN NEXT _row;
+        SELECT INTO _row * FROM pkg_relation WHERE p1 = _row.p2 and relation = _relation;
+    END LOOP;
+    RETURN;
+END
+
+$BODY$
+  LANGUAGE 'plpgsql' VOLATILE;
+ALTER FUNCTION bj_super_pkg("varchar", "varchar") OWNER TO ato;
+
+CREATE OR REPLACE FUNCTION bj_super_term("varchar", "varchar")
+  RETURNS SETOF relation AS
+$BODY$
+
+DECLARE 
+   _row      relation%ROWTYPE;
+   _id       ALIAS FOR $1;
+   _relation ALIAS FOR $2;
+
+BEGIN
+
+    SELECT INTO _row * FROM relation WHERE id = _id;
+
+    WHILE FOUND LOOP
+        RETURN NEXT _row;
+        SELECT INTO _row * FROM relation 
+        WHERE id = _row.pid and relation = _relation;
+    END LOOP;
+    RETURN;
+END
+
+$BODY$
+  LANGUAGE 'plpgsql' VOLATILE;
+ALTER FUNCTION bj_super_term("varchar", "varchar") OWNER TO ato;

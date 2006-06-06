@@ -1,0 +1,1767 @@
+-- 2005-11-03
+
+
+-----------------------------------------------------------------------
+--                Part 0 Build all tables                             -
+-----------------------------------------------------------------------
+
+CREATE TABLE auto_id
+(
+  id serial NOT NULL,
+  term_oid varchar(255),
+  CONSTRAINT auto_id_pkey PRIMARY KEY (id)
+) 
+WITHOUT OIDS;
+ALTER TABLE auto_id OWNER TO ato;
+
+
+CREATE TABLE details
+(
+  term varchar(255),
+  attribute varchar(255),
+  value text,
+  author varchar(255),
+  modified varchar(32)
+) 
+WITHOUT OIDS;
+ALTER TABLE details OWNER TO ato;
+COMMENT ON COLUMN details.term IS 'term oid';
+
+CREATE TABLE editing
+(
+  package varchar(256),
+  usr varchar(256)
+) 
+WITHOUT OIDS;
+ALTER TABLE editing OWNER TO ato;
+GRANT ALL ON TABLE editing TO ato;
+COMMENT ON COLUMN editing.package IS 'package oid';
+
+
+CREATE TABLE online
+(
+  user_id varchar(256) NOT NULL,
+  host varchar(32) NOT NULL,
+  port varchar(8) NOT NULL,
+  login_time varchar(32) NOT NULL
+) 
+WITH OIDS;
+ALTER TABLE online OWNER TO ato;
+COMMENT ON TABLE online IS 'Who it online';
+
+CREATE TABLE package
+(
+  pid varchar(255) NOT NULL,
+  "comment" varchar(256),
+  author varchar(255),
+  modified varchar(32),
+  CONSTRAINT package_pkey PRIMARY KEY (pid)
+) 
+WITH OIDS;
+ALTER TABLE package OWNER TO ato;
+
+CREATE TABLE pkg_relation
+(
+  p1 varchar(255) NOT NULL,
+  relation varchar(255) NOT NULL,
+  p2 varchar(255) NOT NULL,
+  author varchar(256),
+  modified varchar(32),
+  CONSTRAINT pkg_relation_pkey PRIMARY KEY (p1, relation, p2)
+) 
+WITHOUT OIDS;
+ALTER TABLE pkg_relation OWNER TO ato;
+
+
+CREATE TABLE privilege
+(
+  package_oid varchar(32) NOT NULL,
+  user_id varchar(255) NOT NULL,
+  rights varchar(8) NOT NULL,
+  CONSTRAINT privilege_pkey PRIMARY KEY (package_oid, user_id, rights)
+) 
+WITH OIDS;
+ALTER TABLE privilege OWNER TO ato;
+
+CREATE TABLE relation
+(
+  id varchar(255) NOT NULL,
+  pid varchar(255) NOT NULL,
+  relation varchar(255) NOT NULL,
+  author varchar(256),
+  modified varchar(32)
+) 
+WITH OIDS;
+ALTER TABLE relation OWNER TO ato;
+COMMENT ON COLUMN relation.id IS 'the child term oid
+';
+COMMENT ON COLUMN relation.pid IS 'the parent term oid';
+
+CREATE TABLE "schema"
+(
+  "type" varchar(32) NOT NULL,
+  name varchar(256) NOT NULL,
+  CONSTRAINT schema_pkey PRIMARY KEY ("type", name)
+) 
+WITHOUT OIDS;
+ALTER TABLE "schema" OWNER TO ato;
+
+
+CREATE TABLE term
+(
+  id varchar(255) NOT NULL,
+  name varchar(255),
+  package varchar(255),
+  slm varchar(10),
+  author varchar(256),
+  modified varchar,
+  is_obsolete varchar(5) DEFAULT 'false'::character varying,
+  CONSTRAINT term_pkey PRIMARY KEY (id)
+) 
+WITH OIDS;
+ALTER TABLE term OWNER TO ato;
+
+CREATE TABLE users
+(
+  id varchar(255) NOT NULL,
+  role varchar(32) NOT NULL,
+  name varchar(255),
+  institution varchar(255),
+  email varchar(32) NOT NULL,
+  pass varchar(32) NOT NULL,
+  create_date varchar(32),
+  CONSTRAINT user_pkey PRIMARY KEY (id)
+) 
+WITHOUT OIDS;
+ALTER TABLE users OWNER TO ato;
+GRANT ALL ON TABLE users TO ato;
+
+----  create functions -----
+
+CREATE OR REPLACE FUNCTION bj_sub_pkg("varchar", "varchar")
+  RETURNS SETOF pkg_relation AS
+$BODY$
+
+DECLARE 
+   _row      pkg_relation%ROWTYPE;
+   _id       ALIAS FOR $1;
+   _relation ALIAS FOR $2;
+
+BEGIN
+
+    SELECT INTO _row * FROM pkg_relation WHERE p2 = _id;
+
+    WHILE FOUND LOOP
+        RETURN NEXT _row;
+        SELECT INTO _row * FROM pkg_relation WHERE p2 = _row.p1 and relation = _relation;
+    END LOOP;
+    RETURN;
+END
+
+$BODY$
+  LANGUAGE 'plpgsql' VOLATILE;
+ALTER FUNCTION bj_sub_pkg("varchar", "varchar") OWNER TO ato;
+
+CREATE OR REPLACE FUNCTION bj_sub_term("varchar", "varchar")
+  RETURNS SETOF relation AS
+$BODY$
+
+DECLARE 
+   _row      relation%ROWTYPE;
+   _id       ALIAS FOR $1;
+   _relation ALIAS FOR $2;
+
+BEGIN
+
+    SELECT INTO _row * FROM relation WHERE pid = _id;
+
+    WHILE FOUND LOOP
+        RETURN NEXT _row;
+        SELECT INTO _row * FROM relation 
+        WHERE pid = _row.id and relation = _relation;
+    END LOOP;
+    RETURN;
+END
+
+$BODY$
+  LANGUAGE 'plpgsql' VOLATILE;
+ALTER FUNCTION bj_sub_term("varchar", "varchar") OWNER TO ato;
+
+CREATE OR REPLACE FUNCTION bj_super_pkg("varchar", "varchar")
+  RETURNS SETOF pkg_relation AS
+$BODY$
+
+DECLARE 
+   _row      pkg_relation%ROWTYPE;
+   _id       ALIAS FOR $1;
+   _relation ALIAS FOR $2;
+
+BEGIN
+
+    SELECT INTO _row * FROM pkg_relation WHERE p1 = _id;
+
+    WHILE  FOUND LOOP
+        RETURN NEXT _row;
+        SELECT INTO _row * FROM pkg_relation WHERE p1 = _row.p2 and relation = _relation;
+    END LOOP;
+    RETURN;
+END
+
+$BODY$
+  LANGUAGE 'plpgsql' VOLATILE;
+ALTER FUNCTION bj_super_pkg("varchar", "varchar") OWNER TO ato;
+
+CREATE OR REPLACE FUNCTION bj_super_term("varchar", "varchar")
+  RETURNS SETOF relation AS
+$BODY$
+
+DECLARE 
+   _row      relation%ROWTYPE;
+   _id       ALIAS FOR $1;
+   _relation ALIAS FOR $2;
+
+BEGIN
+
+    SELECT INTO _row * FROM relation WHERE id = _id;
+
+    WHILE FOUND LOOP
+        RETURN NEXT _row;
+        SELECT INTO _row * FROM relation 
+        WHERE id = _row.pid and relation = _relation;
+    END LOOP;
+    RETURN;
+END
+
+$BODY$
+  LANGUAGE 'plpgsql' VOLATILE;
+ALTER FUNCTION bj_super_term("varchar", "varchar") OWNER TO ato;
+
+
+------ initialize data --------
+
+INSERT INTO users (id, role, name, email, pass) VALUES ('guest','guest','guest','null', 'guest');
+INSERT INTO users (id, role, name, email, pass) VALUES ('admin','admin','admin','null', 'admin');
+INSERT INTO package (pid) VALUES ('Global');
+INSERT INTO schema (type, name) VALUES ( 'naming-policy', 'Basic Naming Policy') ;
+INSERT INTO schema (type, name) VALUES ( 'partial-order', 'is_a');
+INSERT INTO schema (type, name) VALUES ( 'term-property', 'trait_name');
+INSERT INTO schema (type, name) VALUES ( 'term-property', 'abbreviat');
+INSERT INTO schema (type, name) VALUES ( 'term-property', 'custom_name');
+INSERT INTO schema (type, name) VALUES ( 'term-property', 'trait_desc');
+INSERT INTO schema (type, name) VALUES ( 'term-property', 'measurement');
+INSERT INTO schema (type, name) VALUES ( 'term-property', 'scale_unit');
+
+
+
+-----------------------------------------------------------------------
+--                Part 1 Build the term table                         -
+-----------------------------------------------------------------------
+
+-- clear all old content
+DELETE FROM term;
+ 
+-- fill the term table
+
+INSERT INTO term (id, name, package, slm, is_obsolete) VALUES ('0000000','Meat Quality','Global','public','false');   
+INSERT INTO term (id, name, package, slm, is_obsolete) VALUES ('0000001','Health','Global','public','false');   
+INSERT INTO term (id, name, package, slm, is_obsolete) VALUES ('0000002','Exterior','Global','public','false');   
+INSERT INTO term (id, name, package, slm, is_obsolete) VALUES ('0000003','Production','Global','public','false');   
+INSERT INTO term (id, name, package, slm, is_obsolete) VALUES ('0000004','Reproduction','Global','public','false');   
+INSERT INTO term (id, name, package, slm, is_obsolete) VALUES ('0000005','abdominal fat','Global','public','false');   
+INSERT INTO term (id, name, package, slm, is_obsolete) VALUES ('0000006','backfat [average] thickness','Global','public','false');   
+INSERT INTO term (id, name, package, slm, is_obsolete) VALUES ('0000007','backfat [average] thickness','Global','public','false');   
+INSERT INTO term (id, name, package, slm, is_obsolete) VALUES ('0000008','backfat [average] thickness','Global','public','false');   
+INSERT INTO term (id, name, package, slm, is_obsolete) VALUES ('0000009','backfat at first rib','Global','public','false');   
+INSERT INTO term (id, name, package, slm, is_obsolete) VALUES ('0000010','backfat at first rib [measured at 14 weeks of age]','Global','public','false');   
+INSERT INTO term (id, name, package, slm, is_obsolete) VALUES ('0000011','backfat at first rib [measured at 26 weeks of age]','Global','public','false');   
+INSERT INTO term (id, name, package, slm, is_obsolete) VALUES ('0000012','backfat above muscle dorsi','Global','public','false');   
+INSERT INTO term (id, name, package, slm, is_obsolete) VALUES ('0000013','backfat thickness at last rib','Global','public','false');   
+INSERT INTO term (id, name, package, slm, is_obsolete) VALUES ('0000014','backfat depth at last rib','Global','public','false');   
+INSERT INTO term (id, name, package, slm, is_obsolete) VALUES ('0000015','backfat at last rib [measured at 14 weeks of age]','Global','public','false');   
+INSERT INTO term (id, name, package, slm, is_obsolete) VALUES ('0000016','backfat at last rib [measured at 26 weeks of age]','Global','public','false');   
+INSERT INTO term (id, name, package, slm, is_obsolete) VALUES ('0000017','backfat at P2 position','Global','public','false');   
+INSERT INTO term (id, name, package, slm, is_obsolete) VALUES ('0000018','backfat at shoulder','Global','public','false');   
+INSERT INTO term (id, name, package, slm, is_obsolete) VALUES ('0000019','backfat at tenth rib','Global','public','false');   
+INSERT INTO term (id, name, package, slm, is_obsolete) VALUES ('0000020','backfat between 3th and 4th rib','Global','public','false');   
+INSERT INTO term (id, name, package, slm, is_obsolete) VALUES ('0000021','backfat between 6th and 7th rib','Global','public','false');   
+INSERT INTO term (id, name, package, slm, is_obsolete) VALUES ('0000022','backfat depth at max. mus. depth','Global','public','false');   
+INSERT INTO term (id, name, package, slm, is_obsolete) VALUES ('0000023','backfat at last lumbar','Global','public','false');   
+INSERT INTO term (id, name, package, slm, is_obsolete) VALUES ('0000024','backfat between the last 3th and 4th lumbar','Global','public','false');   
+INSERT INTO term (id, name, package, slm, is_obsolete) VALUES ('0000025','backfat at last lumbar [measured at 14 weeks of age]','Global','public','false');   
+INSERT INTO term (id, name, package, slm, is_obsolete) VALUES ('0000026','backfat at last lumbar [measured at 26 weeks of age]','Global','public','false');   
+INSERT INTO term (id, name, package, slm, is_obsolete) VALUES ('0000027','backfat at rump','Global','public','false');   
+INSERT INTO term (id, name, package, slm, is_obsolete) VALUES ('0000028','backfat middle','Global','public','false');   
+INSERT INTO term (id, name, package, slm, is_obsolete) VALUES ('0000029','backfat side','Global','public','false');   
+INSERT INTO term (id, name, package, slm, is_obsolete) VALUES ('0000030','backfat [13 weeks of age]','Global','public','false');   
+INSERT INTO term (id, name, package, slm, is_obsolete) VALUES ('0000031','backfat [17 weeks of age]','Global','public','false');   
+INSERT INTO term (id, name, package, slm, is_obsolete) VALUES ('0000032','backfat [22 weeks of age]','Global','public','false');   
+INSERT INTO term (id, name, package, slm, is_obsolete) VALUES ('0000033','backfat [40 kg live weight]','Global','public','false');   
+INSERT INTO term (id, name, package, slm, is_obsolete) VALUES ('0000034','backfat [60 kg live weight]','Global','public','false');   
+INSERT INTO term (id, name, package, slm, is_obsolete) VALUES ('0000035','fat percentage in carcass','Global','public','false');   
+INSERT INTO term (id, name, package, slm, is_obsolete) VALUES ('0000036','fat area','Global','public','false');   
+INSERT INTO term (id, name, package, slm, is_obsolete) VALUES ('0000037','fat weight [total]','Global','public','false');   
+INSERT INTO term (id, name, package, slm, is_obsolete) VALUES ('0000038','intermuscular fat weight','Global','public','false');   
+INSERT INTO term (id, name, package, slm, is_obsolete) VALUES ('0000039','intramuscular fat percentage','Global','public','false');   
+INSERT INTO term (id, name, package, slm, is_obsolete) VALUES ('0000040','backfat weight','Global','public','false');   
+INSERT INTO term (id, name, package, slm, is_obsolete) VALUES ('0000041','leaf fat weight','Global','public','false');   
+INSERT INTO term (id, name, package, slm, is_obsolete) VALUES ('0000042','leaf fat percentage','Global','public','false');   
+INSERT INTO term (id, name, package, slm, is_obsolete) VALUES ('0000043','intestinal fat weight','Global','public','false');   
+INSERT INTO term (id, name, package, slm, is_obsolete) VALUES ('0000044','intestinal fat percent','Global','public','false');   
+INSERT INTO term (id, name, package, slm, is_obsolete) VALUES ('0000045','internal fat ratio','Global','public','false');   
+INSERT INTO term (id, name, package, slm, is_obsolete) VALUES ('0000046','fat ratio [percentage]','Global','public','false');   
+INSERT INTO term (id, name, package, slm, is_obsolete) VALUES ('0000047','Percentage of backfat and leaf fat in carcass','Global','public','false');   
+INSERT INTO term (id, name, package, slm, is_obsolete) VALUES ('0000048','marbling','Global','public','false');   
+INSERT INTO term (id, name, package, slm, is_obsolete) VALUES ('0000049','residual fatty acids','Global','public','false');   
+INSERT INTO term (id, name, package, slm, is_obsolete) VALUES ('0000050','side fat','Global','public','false');   
+INSERT INTO term (id, name, package, slm, is_obsolete) VALUES ('0000051','subcutaneous fat depth','Global','public','false');   
+INSERT INTO term (id, name, package, slm, is_obsolete) VALUES ('0000052','subcutaneous fat weight','Global','public','false');   
+INSERT INTO term (id, name, package, slm, is_obsolete) VALUES ('0000053','sum of all fatty acids','Global','public','false');   
+INSERT INTO term (id, name, package, slm, is_obsolete) VALUES ('0000054','total lipid','Global','public','false');   
+INSERT INTO term (id, name, package, slm, is_obsolete) VALUES ('0000055','color a','Global','public','false');   
+INSERT INTO term (id, name, package, slm, is_obsolete) VALUES ('0000056','color b','Global','public','false');   
+INSERT INTO term (id, name, package, slm, is_obsolete) VALUES ('0000057','color L','Global','public','false');   
+INSERT INTO term (id, name, package, slm, is_obsolete) VALUES ('0000058','hue','Global','public','false');   
+INSERT INTO term (id, name, package, slm, is_obsolete) VALUES ('0000059','meat brightness','Global','public','false');   
+INSERT INTO term (id, name, package, slm, is_obsolete) VALUES ('0000060','light reflection','Global','public','false');   
+INSERT INTO term (id, name, package, slm, is_obsolete) VALUES ('0000061','color score','Global','public','false');   
+INSERT INTO term (id, name, package, slm, is_obsolete) VALUES ('0000062','Hematin pigmentation','Global','public','false');   
+INSERT INTO term (id, name, package, slm, is_obsolete) VALUES ('0000063','pH 24 hours post mortem (loin)','Global','public','false');   
+INSERT INTO term (id, name, package, slm, is_obsolete) VALUES ('0000064','pH 24 hours post mortem (ham)','Global','public','false');   
+INSERT INTO term (id, name, package, slm, is_obsolete) VALUES ('0000065','pH 45 minutes post mortem','Global','public','false');   
+INSERT INTO term (id, name, package, slm, is_obsolete) VALUES ('0000066','pH for Biceps Femoris','Global','public','false');   
+INSERT INTO term (id, name, package, slm, is_obsolete) VALUES ('0000067','pH for Semispinalis Dorsi','Global','public','false');   
+INSERT INTO term (id, name, package, slm, is_obsolete) VALUES ('0000068','pH for Longissmus Dorsi','Global','public','false');   
+INSERT INTO term (id, name, package, slm, is_obsolete) VALUES ('0000069','conductivity 45 minutes post mortem','Global','public','false');   
+INSERT INTO term (id, name, package, slm, is_obsolete) VALUES ('0000070','conductivity 24 hours post mortem','Global','public','false');   
+INSERT INTO term (id, name, package, slm, is_obsolete) VALUES ('0000071','Creatine-phospho-kinase test','Global','public','false');   
+INSERT INTO term (id, name, package, slm, is_obsolete) VALUES ('0000072','Rigor mortis','Global','public','false');   
+INSERT INTO term (id, name, package, slm, is_obsolete) VALUES ('0000073','average instron (star probe) force','Global','public','false');   
+INSERT INTO term (id, name, package, slm, is_obsolete) VALUES ('0000074','chew score','Global','public','false');   
+INSERT INTO term (id, name, package, slm, is_obsolete) VALUES ('0000075','cooking loss','Global','public','false');   
+INSERT INTO term (id, name, package, slm, is_obsolete) VALUES ('0000076','drip loss','Global','public','false');   
+INSERT INTO term (id, name, package, slm, is_obsolete) VALUES ('0000077','Number of white fibers','Global','public','false');   
+INSERT INTO term (id, name, package, slm, is_obsolete) VALUES ('0000078','Percentage of white fibers','Global','public','false');   
+INSERT INTO term (id, name, package, slm, is_obsolete) VALUES ('0000079','Diameter of white fibers','Global','public','false');   
+INSERT INTO term (id, name, package, slm, is_obsolete) VALUES ('0000080','R-value','Global','public','false');   
+INSERT INTO term (id, name, package, slm, is_obsolete) VALUES ('0000081','R-value / Diameter of white fibers','Global','public','false');   
+INSERT INTO term (id, name, package, slm, is_obsolete) VALUES ('0000082','Lactate / Diameter of white fibers','Global','public','false');   
+INSERT INTO term (id, name, package, slm, is_obsolete) VALUES ('0000083','fiber type 1','Global','public','false');   
+INSERT INTO term (id, name, package, slm, is_obsolete) VALUES ('0000084','fiber type 2 ratio','Global','public','false');   
+INSERT INTO term (id, name, package, slm, is_obsolete) VALUES ('0000085','firmness','Global','public','false');   
+INSERT INTO term (id, name, package, slm, is_obsolete) VALUES ('0000086','percent cooking loss','Global','public','false');   
+INSERT INTO term (id, name, package, slm, is_obsolete) VALUES ('0000087','shear force','Global','public','false');   
+INSERT INTO term (id, name, package, slm, is_obsolete) VALUES ('0000088','tenderness score','Global','public','false');   
+INSERT INTO term (id, name, package, slm, is_obsolete) VALUES ('0000089','water holding capacity','Global','public','false');   
+INSERT INTO term (id, name, package, slm, is_obsolete) VALUES ('0000090','Moisture Content','Global','public','false');   
+INSERT INTO term (id, name, package, slm, is_obsolete) VALUES ('0000091','androstenone, laboratory','Global','public','false');   
+INSERT INTO term (id, name, package, slm, is_obsolete) VALUES ('0000092','average glycogen','Global','public','false');   
+INSERT INTO term (id, name, package, slm, is_obsolete) VALUES ('0000093','average glycolytic potential','Global','public','false');   
+INSERT INTO term (id, name, package, slm, is_obsolete) VALUES ('0000094','average lactate','Global','public','false');   
+INSERT INTO term (id, name, package, slm, is_obsolete) VALUES ('0000095','cholesterol','Global','public','false');   
+INSERT INTO term (id, name, package, slm, is_obsolete) VALUES ('0000096','indole, laboratory','Global','public','false');   
+INSERT INTO term (id, name, package, slm, is_obsolete) VALUES ('0000097','muscle moisture percentage','Global','public','false');   
+INSERT INTO term (id, name, package, slm, is_obsolete) VALUES ('0000098','muscle protein percentage','Global','public','false');   
+INSERT INTO term (id, name, package, slm, is_obsolete) VALUES ('0000099','pork flavour in fat','Global','public','false');   
+INSERT INTO term (id, name, package, slm, is_obsolete) VALUES ('0000100','pork flavour in lean','Global','public','false');   
+INSERT INTO term (id, name, package, slm, is_obsolete) VALUES ('0000101','skatole, laboratory','Global','public','false');   
+INSERT INTO term (id, name, package, slm, is_obsolete) VALUES ('0000102','androstenone, taste panel','Global','public','false');   
+INSERT INTO term (id, name, package, slm, is_obsolete) VALUES ('0000103','skatole, taste panel','Global','public','false');   
+INSERT INTO term (id, name, package, slm, is_obsolete) VALUES ('0000104','subjective abnormal flavour in fat','Global','public','false');   
+INSERT INTO term (id, name, package, slm, is_obsolete) VALUES ('0000105','subjective abnormal flavour in lean','Global','public','false');   
+INSERT INTO term (id, name, package, slm, is_obsolete) VALUES ('0000106','subjective boar flavor in fat','Global','public','false');   
+INSERT INTO term (id, name, package, slm, is_obsolete) VALUES ('0000107','subjective boar flavor in lean','Global','public','false');   
+INSERT INTO term (id, name, package, slm, is_obsolete) VALUES ('0000108','subjective chew score','Global','public','false');   
+INSERT INTO term (id, name, package, slm, is_obsolete) VALUES ('0000109','subjective flavor score','Global','public','false');   
+INSERT INTO term (id, name, package, slm, is_obsolete) VALUES ('0000110','subjective juiciness score','Global','public','false');   
+INSERT INTO term (id, name, package, slm, is_obsolete) VALUES ('0000111','subjective pork flavor in fat','Global','public','false');   
+INSERT INTO term (id, name, package, slm, is_obsolete) VALUES ('0000112','subjective pork flavor in lean','Global','public','false');   
+INSERT INTO term (id, name, package, slm, is_obsolete) VALUES ('0000113','subjective tenderness score','Global','public','false');   
+INSERT INTO term (id, name, package, slm, is_obsolete) VALUES ('0000114','subjective off-flavor score','Global','public','false');   
+INSERT INTO term (id, name, package, slm, is_obsolete) VALUES ('0000115','intensity taste','Global','public','false');   
+INSERT INTO term (id, name, package, slm, is_obsolete) VALUES ('0000116','subjective abnormal odor','Global','public','false');   
+INSERT INTO term (id, name, package, slm, is_obsolete) VALUES ('0000117','subjective overall acceptibility score','Global','public','false');   
+INSERT INTO term (id, name, package, slm, is_obsolete) VALUES ('0000118','subjective pork odour','Global','public','false');   
+INSERT INTO term (id, name, package, slm, is_obsolete) VALUES ('0000119','smell intensity','Global','public','false');   
+INSERT INTO term (id, name, package, slm, is_obsolete) VALUES ('0000120','smell intensity - fat','Global','public','false');   
+INSERT INTO term (id, name, package, slm, is_obsolete) VALUES ('0000121','Sub-acid smell','Global','public','false');   
+INSERT INTO term (id, name, package, slm, is_obsolete) VALUES ('0000122','body mass index','Global','public','false');   
+INSERT INTO term (id, name, package, slm, is_obsolete) VALUES ('0000123','bone weight','Global','public','false');   
+INSERT INTO term (id, name, package, slm, is_obsolete) VALUES ('0000124','bone percent','Global','public','false');   
+INSERT INTO term (id, name, package, slm, is_obsolete) VALUES ('0000125','bone/lean meat ratio in ham','Global','public','false');   
+INSERT INTO term (id, name, package, slm, is_obsolete) VALUES ('0000126','Lean meat + bone in ham + back','Global','public','false');   
+INSERT INTO term (id, name, package, slm, is_obsolete) VALUES ('0000127','Lean mass (weight)','Global','public','false');   
+INSERT INTO term (id, name, package, slm, is_obsolete) VALUES ('0000128','Lean meat + bone in back','Global','public','false');   
+INSERT INTO term (id, name, package, slm, is_obsolete) VALUES ('0000129','Backfat percentage','Global','public','false');   
+INSERT INTO term (id, name, package, slm, is_obsolete) VALUES ('0000130','Fat-cut percentage','Global','public','false');   
+INSERT INTO term (id, name, package, slm, is_obsolete) VALUES ('0000131','belly weight','Global','public','false');   
+INSERT INTO term (id, name, package, slm, is_obsolete) VALUES ('0000132','belly percentage','Global','public','false');   
+INSERT INTO term (id, name, package, slm, is_obsolete) VALUES ('0000133','carcass length','Global','public','false');   
+INSERT INTO term (id, name, package, slm, is_obsolete) VALUES ('0000134','carcass weight (cold)','Global','public','false');   
+INSERT INTO term (id, name, package, slm, is_obsolete) VALUES ('0000135','Carcass yield','Global','public','false');   
+INSERT INTO term (id, name, package, slm, is_obsolete) VALUES ('0000136','carcass fat free weight','Global','public','false');   
+INSERT INTO term (id, name, package, slm, is_obsolete) VALUES ('0000137','hot carcass weight','Global','public','false');   
+INSERT INTO term (id, name, package, slm, is_obsolete) VALUES ('0000138','dressing percentage','Global','public','false');   
+INSERT INTO term (id, name, package, slm, is_obsolete) VALUES ('0000139','diaphragm weight','Global','public','false');   
+INSERT INTO term (id, name, package, slm, is_obsolete) VALUES ('0000140','eye muscle depth','Global','public','false');   
+INSERT INTO term (id, name, package, slm, is_obsolete) VALUES ('0000141','Feet weight','Global','public','false');   
+INSERT INTO term (id, name, package, slm, is_obsolete) VALUES ('0000142','foreloin weight post-dissection','Global','public','false');   
+INSERT INTO term (id, name, package, slm, is_obsolete) VALUES ('0000143','foreloin weight pre-dissection','Global','public','false');   
+INSERT INTO term (id, name, package, slm, is_obsolete) VALUES ('0000144','head weight','Global','public','false');   
+INSERT INTO term (id, name, package, slm, is_obsolete) VALUES ('0000145','lean percentage','Global','public','false');   
+INSERT INTO term (id, name, package, slm, is_obsolete) VALUES ('0000146','ham percent','Global','public','false');   
+INSERT INTO term (id, name, package, slm, is_obsolete) VALUES ('0000147','lean thickness between 3th and 4th rib','Global','public','false');   
+INSERT INTO term (id, name, package, slm, is_obsolete) VALUES ('0000148','loin eye area','Global','public','false');   
+INSERT INTO term (id, name, package, slm, is_obsolete) VALUES ('0000149','Longissimus muscle length','Global','public','false');   
+INSERT INTO term (id, name, package, slm, is_obsolete) VALUES ('0000150','muscle + diaphragm weight','Global','public','false');   
+INSERT INTO term (id, name, package, slm, is_obsolete) VALUES ('0000151','muscle weight','Global','public','false');   
+INSERT INTO term (id, name, package, slm, is_obsolete) VALUES ('0000152','Loin weight','Global','public','false');   
+INSERT INTO term (id, name, package, slm, is_obsolete) VALUES ('0000153','Loin percent','Global','public','false');   
+INSERT INTO term (id, name, package, slm, is_obsolete) VALUES ('0000154','Ham weight','Global','public','false');   
+INSERT INTO term (id, name, package, slm, is_obsolete) VALUES ('0000155','Estimated carcass lean content','Global','public','false');   
+INSERT INTO term (id, name, package, slm, is_obsolete) VALUES ('0000156','Loin and ham percentage in carcass','Global','public','false');   
+INSERT INTO term (id, name, package, slm, is_obsolete) VALUES ('0000157','Shoulder weight','Global','public','false');   
+INSERT INTO term (id, name, package, slm, is_obsolete) VALUES ('0000158','Loin muscle depth','Global','public','false');   
+INSERT INTO term (id, name, package, slm, is_obsolete) VALUES ('0000159','Loin and belly cut','Global','public','false');   
+INSERT INTO term (id, name, package, slm, is_obsolete) VALUES ('0000160','skin weight','Global','public','false');   
+INSERT INTO term (id, name, package, slm, is_obsolete) VALUES ('0000161','skin percentage','Global','public','false');    
+INSERT INTO term (id, name, package, slm, is_obsolete) VALUES ('0000162','skin thickness','Global','public','false');   
+INSERT INTO term (id, name, package, slm, is_obsolete) VALUES ('0000163','Trimmed whole-sale product / live weight','Global','public','false');   
+INSERT INTO term (id, name, package, slm, is_obsolete) VALUES ('0000164','Trimmed whole-sale product / carcass weight','Global','public','false');   
+INSERT INTO term (id, name, package, slm, is_obsolete) VALUES ('0000165','Heart weight','Global','public','false');   
+INSERT INTO term (id, name, package, slm, is_obsolete) VALUES ('0000166','fat androstenone level','Global','public','false');   
+INSERT INTO term (id, name, package, slm, is_obsolete) VALUES ('0000167','fat androstenone level at 100 days of age','Global','public','false');   
+INSERT INTO term (id, name, package, slm, is_obsolete) VALUES ('0000168','fat androstenone level at 120 days of age','Global','public','false');   
+INSERT INTO term (id, name, package, slm, is_obsolete) VALUES ('0000169','fat androstenone level at 140 days of age','Global','public','false');   
+INSERT INTO term (id, name, package, slm, is_obsolete) VALUES ('0000170','fat androstenone level at 160 days of age','Global','public','false');   
+INSERT INTO term (id, name, package, slm, is_obsolete) VALUES ('0000171','Linoleic acid percentage','Global','public','false');   
+INSERT INTO term (id, name, package, slm, is_obsolete) VALUES ('0000172','heptadecanoic acid percentage','Global','public','false');   
+INSERT INTO term (id, name, package, slm, is_obsolete) VALUES ('0000173','Linolenic acid percentage','Global','public','false');   
+INSERT INTO term (id, name, package, slm, is_obsolete) VALUES ('0000174','Myristic acid percentage','Global','public','false');   
+INSERT INTO term (id, name, package, slm, is_obsolete) VALUES ('0000175','Palmitic acid percentage','Global','public','false');   
+INSERT INTO term (id, name, package, slm, is_obsolete) VALUES ('0000176','Palmitoleic acid percentage','Global','public','false');   
+INSERT INTO term (id, name, package, slm, is_obsolete) VALUES ('0000177','Heptadecanoic acid percentage','Global','public','false');   
+INSERT INTO term (id, name, package, slm, is_obsolete) VALUES ('0000178','Stearic acid percentage','Global','public','false');   
+INSERT INTO term (id, name, package, slm, is_obsolete) VALUES ('0000179','Oleic acid percentage','Global','public','false');   
+INSERT INTO term (id, name, package, slm, is_obsolete) VALUES ('0000180','7-Octadecenoic acid percentage','Global','public','false');   
+INSERT INTO term (id, name, package, slm, is_obsolete) VALUES ('0000181','Eicosenoic acid percentage','Global','public','false');   
+INSERT INTO term (id, name, package, slm, is_obsolete) VALUES ('0000182','Eicosadienoic acid percentage','Global','public','false');   
+INSERT INTO term (id, name, package, slm, is_obsolete) VALUES ('0000183','Average chain length','Global','public','false');   
+INSERT INTO term (id, name, package, slm, is_obsolete) VALUES ('0000184','Double-bond index','Global','public','false');   
+INSERT INTO term (id, name, package, slm, is_obsolete) VALUES ('0000185','Unsaturated index','Global','public','false');   
+INSERT INTO term (id, name, package, slm, is_obsolete) VALUES ('0000186','Peroxidability index','Global','public','false');   
+INSERT INTO term (id, name, package, slm, is_obsolete) VALUES ('0000187','Salmonella count in feces day 1 post infection','Global','public','false');   
+INSERT INTO term (id, name, package, slm, is_obsolete) VALUES ('0000188','Salmonella count in feces day 7 post infection','Global','public','false');   
+INSERT INTO term (id, name, package, slm, is_obsolete) VALUES ('0000189','Salmonella count in liver','Global','public','false');   
+INSERT INTO term (id, name, package, slm, is_obsolete) VALUES ('0000190','Salmonella count in spleen','Global','public','false');   
+INSERT INTO term (id, name, package, slm, is_obsolete) VALUES ('0000191','number of leucocytes','Global','public','false');   
+INSERT INTO term (id, name, package, slm, is_obsolete) VALUES ('0000192','mitogen-induced proliferation','Global','public','false');   
+INSERT INTO term (id, name, package, slm, is_obsolete) VALUES ('0000193','PWM-induced proliferation','Global','public','false');   
+INSERT INTO term (id, name, package, slm, is_obsolete) VALUES ('0000194','conA-induced proliferation','Global','public','false');   
+INSERT INTO term (id, name, package, slm, is_obsolete) VALUES ('0000195','spontenous proliferation','Global','public','false');   
+INSERT INTO term (id, name, package, slm, is_obsolete) VALUES ('0000196','pre/post-vaccination levels of IgG to K88 antigen','Global','public','false');   
+INSERT INTO term (id, name, package, slm, is_obsolete) VALUES ('0000197','specific IgG response to E. coli O149 antigen','Global','public','false');   
+INSERT INTO term (id, name, package, slm, is_obsolete) VALUES ('0000198','post-stress mitogen induced IL-2 activity','Global','public','false');   
+INSERT INTO term (id, name, package, slm, is_obsolete) VALUES ('0000199','stress induced neutrophils numbers alteration','Global','public','false');   
+INSERT INTO term (id, name, package, slm, is_obsolete) VALUES ('0000200','stress induced leukocyte proliferation.','Global','public','false');   
+INSERT INTO term (id, name, package, slm, is_obsolete) VALUES ('0000201','resistance to E.coli K88 infection','Global','public','false');   
+INSERT INTO term (id, name, package, slm, is_obsolete) VALUES ('0000202','Anti-K88 E.coli IgG levels','Global','public','false');   
+INSERT INTO term (id, name, package, slm, is_obsolete) VALUES ('0000203','Anti-O149 E.coli IgG levels','Global','public','false');   
+INSERT INTO term (id, name, package, slm, is_obsolete) VALUES ('0000204','Anti-O149 E.coli IgG level response','Global','public','false');   
+INSERT INTO term (id, name, package, slm, is_obsolete) VALUES ('0000205','Small intestinal Escherichia coli F18 receptor','Global','public','false');   
+INSERT INTO term (id, name, package, slm, is_obsolete) VALUES ('0000206','resistance to psuedorabies virus infection','Global','public','false');   
+INSERT INTO term (id, name, package, slm, is_obsolete) VALUES ('0000207','ACTH basal level','Global','public','false');   
+INSERT INTO term (id, name, package, slm, is_obsolete) VALUES ('0000208','ACTH response to stress','Global','public','false');   
+INSERT INTO term (id, name, package, slm, is_obsolete) VALUES ('0000209','ACTH response to stress','Global','public','false');   
+INSERT INTO term (id, name, package, slm, is_obsolete) VALUES ('0000210','Basal cortisol levels','Global','public','false');   
+INSERT INTO term (id, name, package, slm, is_obsolete) VALUES ('0000211','post-stress cortisol levels','Global','public','false');   
+INSERT INTO term (id, name, package, slm, is_obsolete) VALUES ('0000212','post-stress cortisol levels','Global','public','false');   
+INSERT INTO term (id, name, package, slm, is_obsolete) VALUES ('0000213','Basal glucose levels','Global','public','false');   
+INSERT INTO term (id, name, package, slm, is_obsolete) VALUES ('0000214','Glucose level response to stress','Global','public','false');   
+INSERT INTO term (id, name, package, slm, is_obsolete) VALUES ('0000215','Glucose level variations','Global','public','false');   
+INSERT INTO term (id, name, package, slm, is_obsolete) VALUES ('0000216','Locomotion','Global','public','false');   
+INSERT INTO term (id, name, package, slm, is_obsolete) VALUES ('0000217','Exploration','Global','public','false');   
+INSERT INTO term (id, name, package, slm, is_obsolete) VALUES ('0000218','neuroendocrine responses','Global','public','false');   
+INSERT INTO term (id, name, package, slm, is_obsolete) VALUES ('0000219','black vs white color','Global','public','false');   
+INSERT INTO term (id, name, package, slm, is_obsolete) VALUES ('0000220','spots','Global','public','false');   
+INSERT INTO term (id, name, package, slm, is_obsolete) VALUES ('0000221','body length','Global','public','false');   
+INSERT INTO term (id, name, package, slm, is_obsolete) VALUES ('0000222','thoracic vertebra number','Global','public','false');   
+INSERT INTO term (id, name, package, slm, is_obsolete) VALUES ('0000223','total vertebra number','Global','public','false');   
+INSERT INTO term (id, name, package, slm, is_obsolete) VALUES ('0000224','vertebra distance','Global','public','false');   
+INSERT INTO term (id, name, package, slm, is_obsolete) VALUES ('0000225','claws length front inside','Global','public','false');   
+INSERT INTO term (id, name, package, slm, is_obsolete) VALUES ('0000226','claws length front outside','Global','public','false');   
+INSERT INTO term (id, name, package, slm, is_obsolete) VALUES ('0000227','claws length hind inside','Global','public','false');   
+INSERT INTO term (id, name, package, slm, is_obsolete) VALUES ('0000228','claws length hind outside','Global','public','false');   
+INSERT INTO term (id, name, package, slm, is_obsolete) VALUES ('0000229','feet and legs score','Global','public','false');   
+INSERT INTO term (id, name, package, slm, is_obsolete) VALUES ('0000230','feet score front','Global','public','false');   
+INSERT INTO term (id, name, package, slm, is_obsolete) VALUES ('0000231','feet score rear','Global','public','false');   
+INSERT INTO term (id, name, package, slm, is_obsolete) VALUES ('0000232','hair (amount)','Global','public','false');   
+INSERT INTO term (id, name, package, slm, is_obsolete) VALUES ('0000233','height','Global','public','false');   
+INSERT INTO term (id, name, package, slm, is_obsolete) VALUES ('0000234','joint abnormalities','Global','public','false');   
+INSERT INTO term (id, name, package, slm, is_obsolete) VALUES ('0000235','joint leasions','Global','public','false');   
+INSERT INTO term (id, name, package, slm, is_obsolete) VALUES ('0000236','leg length','Global','public','false');   
+INSERT INTO term (id, name, package, slm, is_obsolete) VALUES ('0000237','leg pastern front','Global','public','false');   
+INSERT INTO term (id, name, package, slm, is_obsolete) VALUES ('0000238','leg pastern hind','Global','public','false');   
+INSERT INTO term (id, name, package, slm, is_obsolete) VALUES ('0000239','leg score front','Global','public','false');   
+INSERT INTO term (id, name, package, slm, is_obsolete) VALUES ('0000240','leg score hind','Global','public','false');   
+INSERT INTO term (id, name, package, slm, is_obsolete) VALUES ('0000241','leg set view','Global','public','false');   
+INSERT INTO term (id, name, package, slm, is_obsolete) VALUES ('0000242','leg torsion front','Global','public','false');   
+INSERT INTO term (id, name, package, slm, is_obsolete) VALUES ('0000243','leg torsion hind','Global','public','false');   
+INSERT INTO term (id, name, package, slm, is_obsolete) VALUES ('0000244','legs angularity front','Global','public','false');   
+INSERT INTO term (id, name, package, slm, is_obsolete) VALUES ('0000245','legs angularity hind','Global','public','false');   
+INSERT INTO term (id, name, package, slm, is_obsolete) VALUES ('0000246','Circumference of cannon bone','Global','public','false');   
+INSERT INTO term (id, name, package, slm, is_obsolete) VALUES ('0000247','femur dimensions','Global','public','false');   
+INSERT INTO term (id, name, package, slm, is_obsolete) VALUES ('0000248','osteochondrosis','Global','public','false');   
+INSERT INTO term (id, name, package, slm, is_obsolete) VALUES ('0000249','lob ear','Global','public','false');   
+INSERT INTO term (id, name, package, slm, is_obsolete) VALUES ('0000250','nose score','Global','public','false');   
+INSERT INTO term (id, name, package, slm, is_obsolete) VALUES ('0000251','swelling of joints','Global','public','false');   
+INSERT INTO term (id, name, package, slm, is_obsolete) VALUES ('0000252','longevity (sow)','Global','public','false');   
+INSERT INTO term (id, name, package, slm, is_obsolete) VALUES ('0000253','scrotal hernia','Global','public','false');   
+INSERT INTO term (id, name, package, slm, is_obsolete) VALUES ('0000254','rhinitis','Global','public','false');   
+INSERT INTO term (id, name, package, slm, is_obsolete) VALUES ('0000255','feed intake 35 to 55 kg','Global','public','false');   
+INSERT INTO term (id, name, package, slm, is_obsolete) VALUES ('0000256','feed intake 55 to 80 kg','Global','public','false');   
+INSERT INTO term (id, name, package, slm, is_obsolete) VALUES ('0000257','length of small intestine','Global','public','false');   
+INSERT INTO term (id, name, package, slm, is_obsolete) VALUES ('0000258','average daily gain','Global','public','false');   
+INSERT INTO term (id, name, package, slm, is_obsolete) VALUES ('0000259','average daily gain 35 to 55 kg','Global','public','false');   
+INSERT INTO term (id, name, package, slm, is_obsolete) VALUES ('0000260','average daily gain 55 to 80 kg','Global','public','false');   
+INSERT INTO term (id, name, package, slm, is_obsolete) VALUES ('0000261','average daily gain weaning to 25 kg','Global','public','false');   
+INSERT INTO term (id, name, package, slm, is_obsolete) VALUES ('0000262','average daily gain weaning to 55 kg','Global','public','false');   
+INSERT INTO term (id, name, package, slm, is_obsolete) VALUES ('0000263','average daily gain 25 to 90 kg','Global','public','false');   
+INSERT INTO term (id, name, package, slm, is_obsolete) VALUES ('0000264','average daily gain during the entire life.','Global','public','false');   
+INSERT INTO term (id, name, package, slm, is_obsolete) VALUES ('0000265','average daily gain birth to end of test','Global','public','false');   
+INSERT INTO term (id, name, package, slm, is_obsolete) VALUES ('0000266','average daily gain birth to 30 kg','Global','public','false');   
+INSERT INTO term (id, name, package, slm, is_obsolete) VALUES ('0000267','average daily gain birth to 70 kg','Global','public','false');   
+INSERT INTO term (id, name, package, slm, is_obsolete) VALUES ('0000268','average daily gain on weaning','Global','public','false');   
+INSERT INTO term (id, name, package, slm, is_obsolete) VALUES ('0000269','average daily gain on test','Global','public','false');   
+INSERT INTO term (id, name, package, slm, is_obsolete) VALUES ('0000270','average daily gain (birth to 3 weeks)','Global','public','false');   
+INSERT INTO term (id, name, package, slm, is_obsolete) VALUES ('0000271','average daily gain (3 to 5 weeks)','Global','public','false');   
+INSERT INTO term (id, name, package, slm, is_obsolete) VALUES ('0000272','average daily gain (5 to 7 weeks)','Global','public','false');   
+INSERT INTO term (id, name, package, slm, is_obsolete) VALUES ('0000273','average daily gain (7 to 9 weeks)','Global','public','false');   
+INSERT INTO term (id, name, package, slm, is_obsolete) VALUES ('0000274','average daily gain (3-10 weeks)','Global','public','false');   
+INSERT INTO term (id, name, package, slm, is_obsolete) VALUES ('0000275','average daily gain (4-13 weeks)','Global','public','false');   
+INSERT INTO term (id, name, package, slm, is_obsolete) VALUES ('0000276','average daily gain (10-22 weeks)','Global','public','false');   
+INSERT INTO term (id, name, package, slm, is_obsolete) VALUES ('0000277','average daily gain (8-18 weeks)','Global','public','false');   
+INSERT INTO term (id, name, package, slm, is_obsolete) VALUES ('0000278','average daily gain (18-26 weeks)','Global','public','false');   
+INSERT INTO term (id, name, package, slm, is_obsolete) VALUES ('0000279','average daily gain (birth-60 days)','Global','public','false');   
+INSERT INTO term (id, name, package, slm, is_obsolete) VALUES ('0000280','average daily gain (60-160 days)','Global','public','false');   
+INSERT INTO term (id, name, package, slm, is_obsolete) VALUES ('0000281','body weight at birth','Global','public','false');   
+INSERT INTO term (id, name, package, slm, is_obsolete) VALUES ('0000282','body weight at slaughter','Global','public','false');   
+INSERT INTO term (id, name, package, slm, is_obsolete) VALUES ('0000283','Age at slaughter','Global','public','false');   
+INSERT INTO term (id, name, package, slm, is_obsolete) VALUES ('0000284','body weight at 16 days','Global','public','false');   
+INSERT INTO term (id, name, package, slm, is_obsolete) VALUES ('0000285','body weight at 3 weeks of age','Global','public','false');   
+INSERT INTO term (id, name, package, slm, is_obsolete) VALUES ('0000286','body weight at weaning','Global','public','false');   
+INSERT INTO term (id, name, package, slm, is_obsolete) VALUES ('0000287','body weight at 4 weeks of age','Global','public','false');   
+INSERT INTO term (id, name, package, slm, is_obsolete) VALUES ('0000288','body weight at 8 weeks of age','Global','public','false');   
+INSERT INTO term (id, name, package, slm, is_obsolete) VALUES ('0000289','body weight at 10 weeks of age','Global','public','false');   
+INSERT INTO term (id, name, package, slm, is_obsolete) VALUES ('0000290','body weight at 13 weeks of age','Global','public','false');   
+INSERT INTO term (id, name, package, slm, is_obsolete) VALUES ('0000291','body weight at 17 weeks of age','Global','public','false');   
+INSERT INTO term (id, name, package, slm, is_obsolete) VALUES ('0000292','body weight at 22 weeks of age','Global','public','false');   
+INSERT INTO term (id, name, package, slm, is_obsolete) VALUES ('0000293','body weight at 25 weeks of age','Global','public','false');   
+INSERT INTO term (id, name, package, slm, is_obsolete) VALUES ('0000294','body weight at 26 weeks of age','Global','public','false');   
+INSERT INTO term (id, name, package, slm, is_obsolete) VALUES ('0000295','body weight at 60 days of age','Global','public','false');   
+INSERT INTO term (id, name, package, slm, is_obsolete) VALUES ('0000296','feed conversion ratio','Global','public','false');   
+INSERT INTO term (id, name, package, slm, is_obsolete) VALUES ('0000297','feed conversion ratio 35 to 55 kg','Global','public','false');   
+INSERT INTO term (id, name, package, slm, is_obsolete) VALUES ('0000298','feed conversion ratio 55 to 80 kg','Global','public','false');   
+INSERT INTO term (id, name, package, slm, is_obsolete) VALUES ('0000299','total number born','Global','public','false');   
+INSERT INTO term (id, name, package, slm, is_obsolete) VALUES ('0000300','total number born alive','Global','public','false');   
+INSERT INTO term (id, name, package, slm, is_obsolete) VALUES ('0000301','fully formed pigs','Global','public','false');   
+INSERT INTO term (id, name, package, slm, is_obsolete) VALUES ('0000302','Number of still born','Global','public','false');   
+INSERT INTO term (id, name, package, slm, is_obsolete) VALUES ('0000303','mummified pigs','Global','public','false');   
+INSERT INTO term (id, name, package, slm, is_obsolete) VALUES ('0000304','ovulation rate','Global','public','false');   
+INSERT INTO term (id, name, package, slm, is_obsolete) VALUES ('0000305','weight of ovary','Global','public','false');   
+INSERT INTO term (id, name, package, slm, is_obsolete) VALUES ('0000306','uterine capacity','Global','public','false');   
+INSERT INTO term (id, name, package, slm, is_obsolete) VALUES ('0000307','uterine horn weight','Global','public','false');   
+INSERT INTO term (id, name, package, slm, is_obsolete) VALUES ('0000308','uterine horn length','Global','public','false');   
+INSERT INTO term (id, name, package, slm, is_obsolete) VALUES ('0000309','number of corpora lutea','Global','public','false');   
+INSERT INTO term (id, name, package, slm, is_obsolete) VALUES ('0000310','male genital tract measurements','Global','public','false');   
+INSERT INTO term (id, name, package, slm, is_obsolete) VALUES ('0000311','testies weight','Global','public','false');   
+INSERT INTO term (id, name, package, slm, is_obsolete) VALUES ('0000312','Number of nipples','Global','public','false');   
+INSERT INTO term (id, name, package, slm, is_obsolete) VALUES ('0000313','age at puberty','Global','public','false');   
+INSERT INTO term (id, name, package, slm, is_obsolete) VALUES ('0000314','age at last farrowing','Global','public','false');   
+INSERT INTO term (id, name, package, slm, is_obsolete) VALUES ('0000315','Gestation length','Global','public','false');   
+INSERT INTO term (id, name, package, slm, is_obsolete) VALUES ('0000316','Plasma FSH concentration','Global','public','false');   
+INSERT INTO term (id, name, package, slm, is_obsolete) VALUES ('0000317','fatness','Global','public','false');   
+INSERT INTO term (id, name, package, slm, is_obsolete) VALUES ('0000318','meat_color','Global','public','false');   
+INSERT INTO term (id, name, package, slm, is_obsolete) VALUES ('0000319','pH','Global','public','false');   
+INSERT INTO term (id, name, package, slm, is_obsolete) VALUES ('0000320','conductivity','Global','public','false');   
+INSERT INTO term (id, name, package, slm, is_obsolete) VALUES ('0000321','Enzyme activity','Global','public','false');   
+INSERT INTO term (id, name, package, slm, is_obsolete) VALUES ('0000322','stiffening','Global','public','false');   
+INSERT INTO term (id, name, package, slm, is_obsolete) VALUES ('0000323','texture','Global','public','false');   
+INSERT INTO term (id, name, package, slm, is_obsolete) VALUES ('0000324','chemical','Global','public','false');   
+INSERT INTO term (id, name, package, slm, is_obsolete) VALUES ('0000325','flavor','Global','public','false');   
+INSERT INTO term (id, name, package, slm, is_obsolete) VALUES ('0000326','odor','Global','public','false');   
+INSERT INTO term (id, name, package, slm, is_obsolete) VALUES ('0000327','Anatomy','Global','public','false');   
+INSERT INTO term (id, name, package, slm, is_obsolete) VALUES ('0000328','Fat composition','Global','public','false');   
+INSERT INTO term (id, name, package, slm, is_obsolete) VALUES ('0000329','pathogen','Global','public','false');   
+INSERT INTO term (id, name, package, slm, is_obsolete) VALUES ('0000330','Immune capacity','Global','public','false');   
+INSERT INTO term (id, name, package, slm, is_obsolete) VALUES ('0000331','Disease resistance','Global','public','false');   
+INSERT INTO term (id, name, package, slm, is_obsolete) VALUES ('0000332','Behavioral','Global','public','false');   
+INSERT INTO term (id, name, package, slm, is_obsolete) VALUES ('0000333','Coat_color','Global','public','false');   
+INSERT INTO term (id, name, package, slm, is_obsolete) VALUES ('0000334','conformation','Global','public','false');   
+INSERT INTO term (id, name, package, slm, is_obsolete) VALUES ('0000335','age','Global','public','false');   
+INSERT INTO term (id, name, package, slm, is_obsolete) VALUES ('0000336','defects','Global','public','false');   
+INSERT INTO term (id, name, package, slm, is_obsolete) VALUES ('0000337','feed intake','Global','public','false');   
+INSERT INTO term (id, name, package, slm, is_obsolete) VALUES ('0000338','digestive organ','Global','public','false');   
+INSERT INTO term (id, name, package, slm, is_obsolete) VALUES ('0000339','growth','Global','public','false');   
+INSERT INTO term (id, name, package, slm, is_obsolete) VALUES ('0000340','feed conversion','Global','public','false');   
+INSERT INTO term (id, name, package, slm, is_obsolete) VALUES ('0000341','Litter size','Global','public','false');   
+INSERT INTO term (id, name, package, slm, is_obsolete) VALUES ('0000342','Reproductive organ','Global','public','false');   
+INSERT INTO term (id, name, package, slm, is_obsolete) VALUES ('0000343','Reproductive organ','Global','public','false');   
+INSERT INTO term (id, name, package, slm, is_obsolete) VALUES ('0000344','Reproductive traits','Global','public','false');   
+INSERT INTO term (id, name, package, slm, is_obsolete) VALUES ('0000345','endocrine','Global','public','false');   
+INSERT INTO term (id, name, package, slm, is_obsolete) VALUES ('0000346','ATO','Global','public','false');   
+INSERT INTO term (id, name, package, slm, is_obsolete) VALUES ('0000347','sus scrofa','Global','public','false'); 
+
+-- replace Global with its oid
+UPDATE term SET package = package.oid FROM package WHERE term.package = package.pid AND term.package= 'Global';
+
+
+-----------------------------------------------------------------------
+--                Part 2 Build the relation table                     -
+-----------------------------------------------------------------------
+
+INSERT INTO relation (id, pid, relation)  VALUES('0000347','0000346', 'is_a');
+INSERT INTO relation (id, pid, relation)  VALUES('0000000','0000347', 'is_a');
+INSERT INTO relation (id, pid, relation)  VALUES('0000001','0000347', 'is_a');
+INSERT INTO relation (id, pid, relation)  VALUES('0000002','0000347', 'is_a');
+INSERT INTO relation (id, pid, relation)  VALUES('0000003','0000347', 'is_a');
+INSERT INTO relation (id, pid, relation)  VALUES('0000004','0000347', 'is_a');
+INSERT INTO relation (id, pid, relation)  VALUES('0000317','0000000', 'is_a');
+INSERT INTO relation (id, pid, relation)  VALUES('0000318','0000000', 'is_a');
+INSERT INTO relation (id, pid, relation)  VALUES('0000319','0000000', 'is_a');
+INSERT INTO relation (id, pid, relation)  VALUES('0000320','0000000', 'is_a');
+INSERT INTO relation (id, pid, relation)  VALUES('0000321','0000000', 'is_a');
+INSERT INTO relation (id, pid, relation)  VALUES('0000322','0000000', 'is_a');
+INSERT INTO relation (id, pid, relation)  VALUES('0000323','0000000', 'is_a');
+INSERT INTO relation (id, pid, relation)  VALUES('0000324','0000000', 'is_a');
+INSERT INTO relation (id, pid, relation)  VALUES('0000325','0000000', 'is_a');
+INSERT INTO relation (id, pid, relation)  VALUES('0000326','0000000', 'is_a');
+INSERT INTO relation (id, pid, relation)  VALUES('0000327','0000000', 'is_a');
+INSERT INTO relation (id, pid, relation)  VALUES('0000328','0000000', 'is_a');
+INSERT INTO relation (id, pid, relation)  VALUES('0000329','0000001', 'is_a');
+INSERT INTO relation (id, pid, relation)  VALUES('0000330','0000001', 'is_a');
+INSERT INTO relation (id, pid, relation)  VALUES('0000331','0000001', 'is_a');
+INSERT INTO relation (id, pid, relation)  VALUES('0000332','0000002', 'is_a');
+INSERT INTO relation (id, pid, relation)  VALUES('0000333','0000002', 'is_a');
+INSERT INTO relation (id, pid, relation)  VALUES('0000334','0000002', 'is_a');
+INSERT INTO relation (id, pid, relation)  VALUES('0000335','0000002', 'is_a');
+INSERT INTO relation (id, pid, relation)  VALUES('0000336','0000002', 'is_a');
+INSERT INTO relation (id, pid, relation)  VALUES('0000337','0000003', 'is_a');
+INSERT INTO relation (id, pid, relation)  VALUES('0000338','0000003', 'is_a');
+INSERT INTO relation (id, pid, relation)  VALUES('0000339','0000003', 'is_a');
+INSERT INTO relation (id, pid, relation)  VALUES('0000340','0000003', 'is_a');
+INSERT INTO relation (id, pid, relation)  VALUES('0000341','0000004', 'is_a');
+INSERT INTO relation (id, pid, relation)  VALUES('0000342','0000004', 'is_a');
+INSERT INTO relation (id, pid, relation)  VALUES('0000343','0000004', 'is_a');
+INSERT INTO relation (id, pid, relation)  VALUES('0000344','0000004', 'is_a');
+INSERT INTO relation (id, pid, relation)  VALUES('0000345','0000004', 'is_a');
+INSERT INTO relation (id, pid, relation)  VALUES('0000005','0000317', 'is_a');
+INSERT INTO relation (id, pid, relation)  VALUES('0000006','0000317', 'is_a');
+INSERT INTO relation (id, pid, relation)  VALUES('0000007','0000317', 'is_a');
+INSERT INTO relation (id, pid, relation)  VALUES('0000008','0000317', 'is_a');
+INSERT INTO relation (id, pid, relation)  VALUES('0000009','0000317', 'is_a');
+INSERT INTO relation (id, pid, relation)  VALUES('0000010','0000317', 'is_a');
+INSERT INTO relation (id, pid, relation)  VALUES('0000011','0000317', 'is_a');
+INSERT INTO relation (id, pid, relation)  VALUES('0000012','0000317', 'is_a');
+INSERT INTO relation (id, pid, relation)  VALUES('0000013','0000317', 'is_a');
+INSERT INTO relation (id, pid, relation)  VALUES('0000014','0000317', 'is_a');
+INSERT INTO relation (id, pid, relation)  VALUES('0000015','0000317', 'is_a');
+INSERT INTO relation (id, pid, relation)  VALUES('0000016','0000317', 'is_a');
+INSERT INTO relation (id, pid, relation)  VALUES('0000017','0000317', 'is_a');
+INSERT INTO relation (id, pid, relation)  VALUES('0000018','0000317', 'is_a');
+INSERT INTO relation (id, pid, relation)  VALUES('0000019','0000317', 'is_a');
+INSERT INTO relation (id, pid, relation)  VALUES('0000020','0000317', 'is_a');
+INSERT INTO relation (id, pid, relation)  VALUES('0000021','0000317', 'is_a');
+INSERT INTO relation (id, pid, relation)  VALUES('0000022','0000317', 'is_a');
+INSERT INTO relation (id, pid, relation)  VALUES('0000023','0000317', 'is_a');
+INSERT INTO relation (id, pid, relation)  VALUES('0000024','0000317', 'is_a');
+INSERT INTO relation (id, pid, relation)  VALUES('0000025','0000317', 'is_a');
+INSERT INTO relation (id, pid, relation)  VALUES('0000026','0000317', 'is_a');
+INSERT INTO relation (id, pid, relation)  VALUES('0000027','0000317', 'is_a');
+INSERT INTO relation (id, pid, relation)  VALUES('0000028','0000317', 'is_a');
+INSERT INTO relation (id, pid, relation)  VALUES('0000029','0000317', 'is_a');
+INSERT INTO relation (id, pid, relation)  VALUES('0000030','0000317', 'is_a');
+INSERT INTO relation (id, pid, relation)  VALUES('0000031','0000317', 'is_a');
+INSERT INTO relation (id, pid, relation)  VALUES('0000032','0000317', 'is_a');
+INSERT INTO relation (id, pid, relation)  VALUES('0000033','0000317', 'is_a');
+INSERT INTO relation (id, pid, relation)  VALUES('0000034','0000317', 'is_a');
+INSERT INTO relation (id, pid, relation)  VALUES('0000035','0000317', 'is_a');
+INSERT INTO relation (id, pid, relation)  VALUES('0000036','0000317', 'is_a');
+INSERT INTO relation (id, pid, relation)  VALUES('0000037','0000317', 'is_a');
+INSERT INTO relation (id, pid, relation)  VALUES('0000038','0000317', 'is_a');
+INSERT INTO relation (id, pid, relation)  VALUES('0000039','0000317', 'is_a');
+INSERT INTO relation (id, pid, relation)  VALUES('0000040','0000317', 'is_a');
+INSERT INTO relation (id, pid, relation)  VALUES('0000041','0000317', 'is_a');
+INSERT INTO relation (id, pid, relation)  VALUES('0000042','0000317', 'is_a');
+INSERT INTO relation (id, pid, relation)  VALUES('0000043','0000317', 'is_a');
+INSERT INTO relation (id, pid, relation)  VALUES('0000044','0000317', 'is_a');
+INSERT INTO relation (id, pid, relation)  VALUES('0000045','0000317', 'is_a');
+INSERT INTO relation (id, pid, relation)  VALUES('0000046','0000317', 'is_a');
+INSERT INTO relation (id, pid, relation)  VALUES('0000047','0000317', 'is_a');
+INSERT INTO relation (id, pid, relation)  VALUES('0000048','0000317', 'is_a');
+INSERT INTO relation (id, pid, relation)  VALUES('0000049','0000317', 'is_a');
+INSERT INTO relation (id, pid, relation)  VALUES('0000050','0000317', 'is_a');
+INSERT INTO relation (id, pid, relation)  VALUES('0000051','0000317', 'is_a');
+INSERT INTO relation (id, pid, relation)  VALUES('0000052','0000317', 'is_a');
+INSERT INTO relation (id, pid, relation)  VALUES('0000053','0000317', 'is_a');
+INSERT INTO relation (id, pid, relation)  VALUES('0000054','0000317', 'is_a');
+INSERT INTO relation (id, pid, relation)  VALUES('0000055','0000318', 'is_a');
+INSERT INTO relation (id, pid, relation)  VALUES('0000056','0000318', 'is_a');
+INSERT INTO relation (id, pid, relation)  VALUES('0000057','0000318', 'is_a');
+INSERT INTO relation (id, pid, relation)  VALUES('0000058','0000318', 'is_a');
+INSERT INTO relation (id, pid, relation)  VALUES('0000059','0000318', 'is_a');
+INSERT INTO relation (id, pid, relation)  VALUES('0000060','0000318', 'is_a');
+INSERT INTO relation (id, pid, relation)  VALUES('0000061','0000318', 'is_a');
+INSERT INTO relation (id, pid, relation)  VALUES('0000062','0000318', 'is_a');
+INSERT INTO relation (id, pid, relation)  VALUES('0000063','0000319', 'is_a');
+INSERT INTO relation (id, pid, relation)  VALUES('0000064','0000319', 'is_a');
+INSERT INTO relation (id, pid, relation)  VALUES('0000065','0000319', 'is_a');
+INSERT INTO relation (id, pid, relation)  VALUES('0000066','0000319', 'is_a');
+INSERT INTO relation (id, pid, relation)  VALUES('0000067','0000319', 'is_a');
+INSERT INTO relation (id, pid, relation)  VALUES('0000068','0000319', 'is_a');
+INSERT INTO relation (id, pid, relation)  VALUES('0000069','0000320', 'is_a');
+INSERT INTO relation (id, pid, relation)  VALUES('0000070','0000320', 'is_a');
+INSERT INTO relation (id, pid, relation)  VALUES('0000071','0000321', 'is_a');
+INSERT INTO relation (id, pid, relation)  VALUES('0000072','0000322', 'is_a');
+INSERT INTO relation (id, pid, relation)  VALUES('0000073','0000323', 'is_a');
+INSERT INTO relation (id, pid, relation)  VALUES('0000074','0000323', 'is_a');
+INSERT INTO relation (id, pid, relation)  VALUES('0000075','0000323', 'is_a');
+INSERT INTO relation (id, pid, relation)  VALUES('0000076','0000323', 'is_a');
+INSERT INTO relation (id, pid, relation)  VALUES('0000077','0000323', 'is_a');
+INSERT INTO relation (id, pid, relation)  VALUES('0000078','0000323', 'is_a');
+INSERT INTO relation (id, pid, relation)  VALUES('0000079','0000323', 'is_a');
+INSERT INTO relation (id, pid, relation)  VALUES('0000080','0000323', 'is_a');
+INSERT INTO relation (id, pid, relation)  VALUES('0000081','0000323', 'is_a');
+INSERT INTO relation (id, pid, relation)  VALUES('0000082','0000323', 'is_a');
+INSERT INTO relation (id, pid, relation)  VALUES('0000083','0000323', 'is_a');
+INSERT INTO relation (id, pid, relation)  VALUES('0000084','0000323', 'is_a');
+INSERT INTO relation (id, pid, relation)  VALUES('0000085','0000323', 'is_a');
+INSERT INTO relation (id, pid, relation)  VALUES('0000086','0000323', 'is_a');
+INSERT INTO relation (id, pid, relation)  VALUES('0000087','0000323', 'is_a');
+INSERT INTO relation (id, pid, relation)  VALUES('0000088','0000323', 'is_a');
+INSERT INTO relation (id, pid, relation)  VALUES('0000089','0000323', 'is_a');
+INSERT INTO relation (id, pid, relation)  VALUES('0000090','0000323', 'is_a');
+INSERT INTO relation (id, pid, relation)  VALUES('0000091','0000324', 'is_a');
+INSERT INTO relation (id, pid, relation)  VALUES('0000092','0000324', 'is_a');
+INSERT INTO relation (id, pid, relation)  VALUES('0000093','0000324', 'is_a');
+INSERT INTO relation (id, pid, relation)  VALUES('0000094','0000324', 'is_a');
+INSERT INTO relation (id, pid, relation)  VALUES('0000095','0000324', 'is_a');
+INSERT INTO relation (id, pid, relation)  VALUES('0000096','0000324', 'is_a');
+INSERT INTO relation (id, pid, relation)  VALUES('0000097','0000324', 'is_a');
+INSERT INTO relation (id, pid, relation)  VALUES('0000098','0000324', 'is_a');
+INSERT INTO relation (id, pid, relation)  VALUES('0000099','0000324', 'is_a');
+INSERT INTO relation (id, pid, relation)  VALUES('0000100','0000324', 'is_a');
+INSERT INTO relation (id, pid, relation)  VALUES('0000101','0000324', 'is_a');
+INSERT INTO relation (id, pid, relation)  VALUES('0000102','0000325', 'is_a');
+INSERT INTO relation (id, pid, relation)  VALUES('0000103','0000325', 'is_a');
+INSERT INTO relation (id, pid, relation)  VALUES('0000104','0000325', 'is_a');
+INSERT INTO relation (id, pid, relation)  VALUES('0000105','0000325', 'is_a');
+INSERT INTO relation (id, pid, relation)  VALUES('0000106','0000325', 'is_a');
+INSERT INTO relation (id, pid, relation)  VALUES('0000107','0000325', 'is_a');
+INSERT INTO relation (id, pid, relation)  VALUES('0000108','0000325', 'is_a');
+INSERT INTO relation (id, pid, relation)  VALUES('0000109','0000325', 'is_a');
+INSERT INTO relation (id, pid, relation)  VALUES('0000110','0000325', 'is_a');
+INSERT INTO relation (id, pid, relation)  VALUES('0000111','0000325', 'is_a');
+INSERT INTO relation (id, pid, relation)  VALUES('0000112','0000325', 'is_a');
+INSERT INTO relation (id, pid, relation)  VALUES('0000113','0000325', 'is_a');
+INSERT INTO relation (id, pid, relation)  VALUES('0000114','0000325', 'is_a');
+INSERT INTO relation (id, pid, relation)  VALUES('0000115','0000325', 'is_a');
+INSERT INTO relation (id, pid, relation)  VALUES('0000116','0000326', 'is_a');
+INSERT INTO relation (id, pid, relation)  VALUES('0000117','0000326', 'is_a');
+INSERT INTO relation (id, pid, relation)  VALUES('0000118','0000326', 'is_a');
+INSERT INTO relation (id, pid, relation)  VALUES('0000119','0000326', 'is_a');
+INSERT INTO relation (id, pid, relation)  VALUES('0000120','0000326', 'is_a');
+INSERT INTO relation (id, pid, relation)  VALUES('0000121','0000326', 'is_a');
+INSERT INTO relation (id, pid, relation)  VALUES('0000122','0000327', 'is_a');
+INSERT INTO relation (id, pid, relation)  VALUES('0000123','0000327', 'is_a');
+INSERT INTO relation (id, pid, relation)  VALUES('0000124','0000327', 'is_a');
+INSERT INTO relation (id, pid, relation)  VALUES('0000125','0000327', 'is_a');
+INSERT INTO relation (id, pid, relation)  VALUES('0000126','0000327', 'is_a');
+INSERT INTO relation (id, pid, relation)  VALUES('0000127','0000327', 'is_a');
+INSERT INTO relation (id, pid, relation)  VALUES('0000128','0000327', 'is_a');
+INSERT INTO relation (id, pid, relation)  VALUES('0000129','0000327', 'is_a');
+INSERT INTO relation (id, pid, relation)  VALUES('0000130','0000327', 'is_a');
+INSERT INTO relation (id, pid, relation)  VALUES('0000131','0000327', 'is_a');
+INSERT INTO relation (id, pid, relation)  VALUES('0000132','0000327', 'is_a');
+INSERT INTO relation (id, pid, relation)  VALUES('0000133','0000327', 'is_a');
+INSERT INTO relation (id, pid, relation)  VALUES('0000134','0000327', 'is_a');
+INSERT INTO relation (id, pid, relation)  VALUES('0000135','0000327', 'is_a');
+INSERT INTO relation (id, pid, relation)  VALUES('0000136','0000327', 'is_a');
+INSERT INTO relation (id, pid, relation)  VALUES('0000137','0000327', 'is_a');
+INSERT INTO relation (id, pid, relation)  VALUES('0000138','0000327', 'is_a');
+INSERT INTO relation (id, pid, relation)  VALUES('0000139','0000327', 'is_a');
+INSERT INTO relation (id, pid, relation)  VALUES('0000140','0000327', 'is_a');
+INSERT INTO relation (id, pid, relation)  VALUES('0000141','0000327', 'is_a');
+INSERT INTO relation (id, pid, relation)  VALUES('0000142','0000327', 'is_a');
+INSERT INTO relation (id, pid, relation)  VALUES('0000143','0000327', 'is_a');
+INSERT INTO relation (id, pid, relation)  VALUES('0000144','0000327', 'is_a');
+INSERT INTO relation (id, pid, relation)  VALUES('0000145','0000327', 'is_a');
+INSERT INTO relation (id, pid, relation)  VALUES('0000146','0000327', 'is_a');
+INSERT INTO relation (id, pid, relation)  VALUES('0000147','0000327', 'is_a');
+INSERT INTO relation (id, pid, relation)  VALUES('0000148','0000327', 'is_a');
+INSERT INTO relation (id, pid, relation)  VALUES('0000149','0000327', 'is_a');
+INSERT INTO relation (id, pid, relation)  VALUES('0000150','0000327', 'is_a');
+INSERT INTO relation (id, pid, relation)  VALUES('0000151','0000327', 'is_a');
+INSERT INTO relation (id, pid, relation)  VALUES('0000152','0000327', 'is_a');
+INSERT INTO relation (id, pid, relation)  VALUES('0000153','0000327', 'is_a');
+INSERT INTO relation (id, pid, relation)  VALUES('0000154','0000327', 'is_a');
+INSERT INTO relation (id, pid, relation)  VALUES('0000155','0000327', 'is_a');
+INSERT INTO relation (id, pid, relation)  VALUES('0000156','0000327', 'is_a');
+INSERT INTO relation (id, pid, relation)  VALUES('0000157','0000327', 'is_a');
+INSERT INTO relation (id, pid, relation)  VALUES('0000158','0000327', 'is_a');
+INSERT INTO relation (id, pid, relation)  VALUES('0000159','0000327', 'is_a');
+INSERT INTO relation (id, pid, relation)  VALUES('0000160','0000327', 'is_a');
+INSERT INTO relation (id, pid, relation)  VALUES('0000161','0000327', 'is_a');
+INSERT INTO relation (id, pid, relation)  VALUES('0000162','0000327', 'is_a');
+INSERT INTO relation (id, pid, relation)  VALUES('0000163','0000327', 'is_a');
+INSERT INTO relation (id, pid, relation)  VALUES('0000164','0000327', 'is_a');
+INSERT INTO relation (id, pid, relation)  VALUES('0000165','0000327', 'is_a');
+INSERT INTO relation (id, pid, relation)  VALUES('0000166','0000328', 'is_a');
+INSERT INTO relation (id, pid, relation)  VALUES('0000167','0000328', 'is_a');
+INSERT INTO relation (id, pid, relation)  VALUES('0000168','0000328', 'is_a');
+INSERT INTO relation (id, pid, relation)  VALUES('0000169','0000328', 'is_a');
+INSERT INTO relation (id, pid, relation)  VALUES('0000170','0000328', 'is_a');
+INSERT INTO relation (id, pid, relation)  VALUES('0000171','0000328', 'is_a');
+INSERT INTO relation (id, pid, relation)  VALUES('0000172','0000328', 'is_a');
+INSERT INTO relation (id, pid, relation)  VALUES('0000173','0000328', 'is_a');
+INSERT INTO relation (id, pid, relation)  VALUES('0000174','0000328', 'is_a');
+INSERT INTO relation (id, pid, relation)  VALUES('0000175','0000328', 'is_a');
+INSERT INTO relation (id, pid, relation)  VALUES('0000176','0000328', 'is_a');
+INSERT INTO relation (id, pid, relation)  VALUES('0000177','0000328', 'is_a');
+INSERT INTO relation (id, pid, relation)  VALUES('0000178','0000328', 'is_a');
+INSERT INTO relation (id, pid, relation)  VALUES('0000179','0000328', 'is_a');
+INSERT INTO relation (id, pid, relation)  VALUES('0000180','0000328', 'is_a');
+INSERT INTO relation (id, pid, relation)  VALUES('0000181','0000328', 'is_a');
+INSERT INTO relation (id, pid, relation)  VALUES('0000182','0000328', 'is_a');
+INSERT INTO relation (id, pid, relation)  VALUES('0000183','0000328', 'is_a');
+INSERT INTO relation (id, pid, relation)  VALUES('0000184','0000328', 'is_a');
+INSERT INTO relation (id, pid, relation)  VALUES('0000185','0000328', 'is_a');
+INSERT INTO relation (id, pid, relation)  VALUES('0000186','0000328', 'is_a');
+INSERT INTO relation (id, pid, relation)  VALUES('0000187','0000329', 'is_a');
+INSERT INTO relation (id, pid, relation)  VALUES('0000188','0000329', 'is_a');
+INSERT INTO relation (id, pid, relation)  VALUES('0000189','0000329', 'is_a');
+INSERT INTO relation (id, pid, relation)  VALUES('0000190','0000329', 'is_a');
+INSERT INTO relation (id, pid, relation)  VALUES('0000191','0000330', 'is_a');
+INSERT INTO relation (id, pid, relation)  VALUES('0000192','0000330', 'is_a');
+INSERT INTO relation (id, pid, relation)  VALUES('0000193','0000330', 'is_a');
+INSERT INTO relation (id, pid, relation)  VALUES('0000194','0000330', 'is_a');
+INSERT INTO relation (id, pid, relation)  VALUES('0000195','0000330', 'is_a');
+INSERT INTO relation (id, pid, relation)  VALUES('0000196','0000330', 'is_a');
+INSERT INTO relation (id, pid, relation)  VALUES('0000197','0000330', 'is_a');
+INSERT INTO relation (id, pid, relation)  VALUES('0000198','0000330', 'is_a');
+INSERT INTO relation (id, pid, relation)  VALUES('0000199','0000330', 'is_a');
+INSERT INTO relation (id, pid, relation)  VALUES('0000200','0000330', 'is_a');
+INSERT INTO relation (id, pid, relation)  VALUES('0000201','0000331', 'is_a');
+INSERT INTO relation (id, pid, relation)  VALUES('0000202','0000331', 'is_a');
+INSERT INTO relation (id, pid, relation)  VALUES('0000203','0000331', 'is_a');
+INSERT INTO relation (id, pid, relation)  VALUES('0000204','0000331', 'is_a');
+INSERT INTO relation (id, pid, relation)  VALUES('0000205','0000331', 'is_a');
+INSERT INTO relation (id, pid, relation)  VALUES('0000206','0000331', 'is_a');
+INSERT INTO relation (id, pid, relation)  VALUES('0000207','0000332', 'is_a');
+INSERT INTO relation (id, pid, relation)  VALUES('0000208','0000332', 'is_a');
+INSERT INTO relation (id, pid, relation)  VALUES('0000209','0000332', 'is_a');
+INSERT INTO relation (id, pid, relation)  VALUES('0000210','0000332', 'is_a');
+INSERT INTO relation (id, pid, relation)  VALUES('0000211','0000332', 'is_a');
+INSERT INTO relation (id, pid, relation)  VALUES('0000212','0000332', 'is_a');
+INSERT INTO relation (id, pid, relation)  VALUES('0000213','0000332', 'is_a');
+INSERT INTO relation (id, pid, relation)  VALUES('0000214','0000332', 'is_a');
+INSERT INTO relation (id, pid, relation)  VALUES('0000215','0000332', 'is_a');
+INSERT INTO relation (id, pid, relation)  VALUES('0000216','0000332', 'is_a');
+INSERT INTO relation (id, pid, relation)  VALUES('0000217','0000332', 'is_a');
+INSERT INTO relation (id, pid, relation)  VALUES('0000218','0000332', 'is_a');
+INSERT INTO relation (id, pid, relation)  VALUES('0000219','0000333', 'is_a');
+INSERT INTO relation (id, pid, relation)  VALUES('0000220','0000333', 'is_a');
+INSERT INTO relation (id, pid, relation)  VALUES('0000221','0000334', 'is_a');
+INSERT INTO relation (id, pid, relation)  VALUES('0000222','0000334', 'is_a');
+INSERT INTO relation (id, pid, relation)  VALUES('0000223','0000334', 'is_a');
+INSERT INTO relation (id, pid, relation)  VALUES('0000224','0000334', 'is_a');
+INSERT INTO relation (id, pid, relation)  VALUES('0000225','0000334', 'is_a');
+INSERT INTO relation (id, pid, relation)  VALUES('0000226','0000334', 'is_a');
+INSERT INTO relation (id, pid, relation)  VALUES('0000227','0000334', 'is_a');
+INSERT INTO relation (id, pid, relation)  VALUES('0000228','0000334', 'is_a');
+INSERT INTO relation (id, pid, relation)  VALUES('0000229','0000334', 'is_a');
+INSERT INTO relation (id, pid, relation)  VALUES('0000230','0000334', 'is_a');
+INSERT INTO relation (id, pid, relation)  VALUES('0000231','0000334', 'is_a');
+INSERT INTO relation (id, pid, relation)  VALUES('0000232','0000334', 'is_a');
+INSERT INTO relation (id, pid, relation)  VALUES('0000233','0000334', 'is_a');
+INSERT INTO relation (id, pid, relation)  VALUES('0000234','0000334', 'is_a');
+INSERT INTO relation (id, pid, relation)  VALUES('0000235','0000334', 'is_a');
+INSERT INTO relation (id, pid, relation)  VALUES('0000236','0000334', 'is_a');
+INSERT INTO relation (id, pid, relation)  VALUES('0000237','0000334', 'is_a');
+INSERT INTO relation (id, pid, relation)  VALUES('0000238','0000334', 'is_a');
+INSERT INTO relation (id, pid, relation)  VALUES('0000239','0000334', 'is_a');
+INSERT INTO relation (id, pid, relation)  VALUES('0000240','0000334', 'is_a');
+INSERT INTO relation (id, pid, relation)  VALUES('0000241','0000334', 'is_a');
+INSERT INTO relation (id, pid, relation)  VALUES('0000242','0000334', 'is_a');
+INSERT INTO relation (id, pid, relation)  VALUES('0000243','0000334', 'is_a');
+INSERT INTO relation (id, pid, relation)  VALUES('0000244','0000334', 'is_a');
+INSERT INTO relation (id, pid, relation)  VALUES('0000245','0000334', 'is_a');
+INSERT INTO relation (id, pid, relation)  VALUES('0000246','0000334', 'is_a');
+INSERT INTO relation (id, pid, relation)  VALUES('0000247','0000334', 'is_a');
+INSERT INTO relation (id, pid, relation)  VALUES('0000248','0000334', 'is_a');
+INSERT INTO relation (id, pid, relation)  VALUES('0000249','0000334', 'is_a');
+INSERT INTO relation (id, pid, relation)  VALUES('0000250','0000334', 'is_a');
+INSERT INTO relation (id, pid, relation)  VALUES('0000251','0000334', 'is_a');
+INSERT INTO relation (id, pid, relation)  VALUES('0000252','0000335', 'is_a');
+INSERT INTO relation (id, pid, relation)  VALUES('0000253','0000336', 'is_a');
+INSERT INTO relation (id, pid, relation)  VALUES('0000254','0000336', 'is_a');
+INSERT INTO relation (id, pid, relation)  VALUES('0000255','0000337', 'is_a');
+INSERT INTO relation (id, pid, relation)  VALUES('0000256','0000337', 'is_a');
+INSERT INTO relation (id, pid, relation)  VALUES('0000257','0000338', 'is_a');
+INSERT INTO relation (id, pid, relation)  VALUES('0000258','0000339', 'is_a');
+INSERT INTO relation (id, pid, relation)  VALUES('0000259','0000339', 'is_a');
+INSERT INTO relation (id, pid, relation)  VALUES('0000260','0000339', 'is_a');
+INSERT INTO relation (id, pid, relation)  VALUES('0000261','0000339', 'is_a');
+INSERT INTO relation (id, pid, relation)  VALUES('0000262','0000339', 'is_a');
+INSERT INTO relation (id, pid, relation)  VALUES('0000263','0000339', 'is_a');
+INSERT INTO relation (id, pid, relation)  VALUES('0000264','0000339', 'is_a');
+INSERT INTO relation (id, pid, relation)  VALUES('0000265','0000339', 'is_a');
+INSERT INTO relation (id, pid, relation)  VALUES('0000266','0000339', 'is_a');
+INSERT INTO relation (id, pid, relation)  VALUES('0000267','0000339', 'is_a');
+INSERT INTO relation (id, pid, relation)  VALUES('0000268','0000339', 'is_a');
+INSERT INTO relation (id, pid, relation)  VALUES('0000269','0000339', 'is_a');
+INSERT INTO relation (id, pid, relation)  VALUES('0000270','0000339', 'is_a');
+INSERT INTO relation (id, pid, relation)  VALUES('0000271','0000339', 'is_a');
+INSERT INTO relation (id, pid, relation)  VALUES('0000272','0000339', 'is_a');
+INSERT INTO relation (id, pid, relation)  VALUES('0000273','0000339', 'is_a');
+INSERT INTO relation (id, pid, relation)  VALUES('0000274','0000339', 'is_a');
+INSERT INTO relation (id, pid, relation)  VALUES('0000275','0000339', 'is_a');
+INSERT INTO relation (id, pid, relation)  VALUES('0000276','0000339', 'is_a');
+INSERT INTO relation (id, pid, relation)  VALUES('0000277','0000339', 'is_a');
+INSERT INTO relation (id, pid, relation)  VALUES('0000278','0000339', 'is_a');
+INSERT INTO relation (id, pid, relation)  VALUES('0000279','0000339', 'is_a');
+INSERT INTO relation (id, pid, relation)  VALUES('0000280','0000339', 'is_a');
+INSERT INTO relation (id, pid, relation)  VALUES('0000281','0000339', 'is_a');
+INSERT INTO relation (id, pid, relation)  VALUES('0000282','0000339', 'is_a');
+INSERT INTO relation (id, pid, relation)  VALUES('0000283','0000339', 'is_a');
+INSERT INTO relation (id, pid, relation)  VALUES('0000284','0000339', 'is_a');
+INSERT INTO relation (id, pid, relation)  VALUES('0000285','0000339', 'is_a');
+INSERT INTO relation (id, pid, relation)  VALUES('0000286','0000339', 'is_a');
+INSERT INTO relation (id, pid, relation)  VALUES('0000287','0000339', 'is_a');
+INSERT INTO relation (id, pid, relation)  VALUES('0000288','0000339', 'is_a');
+INSERT INTO relation (id, pid, relation)  VALUES('0000289','0000339', 'is_a');
+INSERT INTO relation (id, pid, relation)  VALUES('0000290','0000339', 'is_a');
+INSERT INTO relation (id, pid, relation)  VALUES('0000291','0000339', 'is_a');
+INSERT INTO relation (id, pid, relation)  VALUES('0000292','0000339', 'is_a');
+INSERT INTO relation (id, pid, relation)  VALUES('0000293','0000339', 'is_a');
+INSERT INTO relation (id, pid, relation)  VALUES('0000294','0000339', 'is_a');
+INSERT INTO relation (id, pid, relation)  VALUES('0000295','0000339', 'is_a');
+INSERT INTO relation (id, pid, relation)  VALUES('0000296','0000340', 'is_a');
+INSERT INTO relation (id, pid, relation)  VALUES('0000297','0000340', 'is_a');
+INSERT INTO relation (id, pid, relation)  VALUES('0000298','0000340', 'is_a');
+INSERT INTO relation (id, pid, relation)  VALUES('0000299','0000341', 'is_a');
+INSERT INTO relation (id, pid, relation)  VALUES('0000300','0000341', 'is_a');
+INSERT INTO relation (id, pid, relation)  VALUES('0000301','0000341', 'is_a');
+INSERT INTO relation (id, pid, relation)  VALUES('0000302','0000341', 'is_a');
+INSERT INTO relation (id, pid, relation)  VALUES('0000303','0000341', 'is_a');
+INSERT INTO relation (id, pid, relation)  VALUES('0000304','0000341', 'is_a');
+INSERT INTO relation (id, pid, relation)  VALUES('0000305','0000342', 'is_a');
+INSERT INTO relation (id, pid, relation)  VALUES('0000306','0000342', 'is_a');
+INSERT INTO relation (id, pid, relation)  VALUES('0000307','0000342', 'is_a');
+INSERT INTO relation (id, pid, relation)  VALUES('0000308','0000342', 'is_a');
+INSERT INTO relation (id, pid, relation)  VALUES('0000309','0000342', 'is_a');
+INSERT INTO relation (id, pid, relation)  VALUES('0000310','0000342', 'is_a');
+INSERT INTO relation (id, pid, relation)  VALUES('0000311','0000342', 'is_a');
+INSERT INTO relation (id, pid, relation)  VALUES('0000312','0000343', 'is_a');
+INSERT INTO relation (id, pid, relation)  VALUES('0000313','0000344', 'is_a');
+INSERT INTO relation (id, pid, relation)  VALUES('0000314','0000344', 'is_a');
+INSERT INTO relation (id, pid, relation)  VALUES('0000315','0000344', 'is_a');
+INSERT INTO relation (id, pid, relation)  VALUES('0000316','0000345', 'is_a');
+
+UPDATE relation SET pid = term.oid FROM term WHERE relation.pid = term.id;
+UPDATE relation SET id = term.oid FROM term WHERE relation.id = term.id;
+
+-----------------------------------------------------------------------
+--                Part 3 Build the details table                      -
+-----------------------------------------------------------------------
+
+INSERT INTO details (term, attribute, value) VALUES ('0000005','trait_name','abdominal fat');
+INSERT INTO details (term, attribute, value) VALUES ('0000005','trait_desc','abdominal fat by weight');
+INSERT INTO details (term, attribute, value) VALUES ('0000005','abbreviat','ABF');
+INSERT INTO details (term, attribute, value) VALUES ('0000005','scale_unit','kg');
+INSERT INTO details (term, attribute, value) VALUES ('0000006','custom_name','average backfat');
+INSERT INTO details (term, attribute, value) VALUES ('0000006','trait_desc','Average backfat thickness among FRIB, LRIB, and LLUM.');
+INSERT INTO details (term, attribute, value) VALUES ('0000006','trait_name','backfat (average) thickness');
+INSERT INTO details (term, attribute, value) VALUES ('0000006','abbreviat','BFT');
+INSERT INTO details (term, attribute, value) VALUES ('0000006','scale_unit','cm');
+INSERT INTO details (term, attribute, value) VALUES ('0000006','measurement','Ruler');
+INSERT INTO details (term, attribute, value) VALUES ('0000007','custom_name','average backfat');
+INSERT INTO details (term, attribute, value) VALUES ('0000007','trait_name','backfat (average) thickness');
+INSERT INTO details (term, attribute, value) VALUES ('0000007','trait_desc','Backfat thickness measured by ultrasound, average of several spots along the spin.');
+INSERT INTO details (term, attribute, value) VALUES ('0000007','abbreviat','BFT');
+INSERT INTO details (term, attribute, value) VALUES ('0000007','scale_unit','cm');
+INSERT INTO details (term, attribute, value) VALUES ('0000007','measurement','Ultrasound.');
+INSERT INTO details (term, attribute, value) VALUES ('0000008','custom_name','average backfat');
+INSERT INTO details (term, attribute, value) VALUES ('0000008','trait_name','backfat (average) thickness');
+INSERT INTO details (term, attribute, value) VALUES ('0000008','trait_desc','Backfat thickness measured by Fat-O-Meater (FOM).');
+INSERT INTO details (term, attribute, value) VALUES ('0000008','abbreviat','BFT');
+INSERT INTO details (term, attribute, value) VALUES ('0000009','trait_name','backfat at first rib');
+INSERT INTO details (term, attribute, value) VALUES ('0000009','trait_desc','Backfat thickness');
+INSERT INTO details (term, attribute, value) VALUES ('0000009','scale_unit','cm');
+INSERT INTO details (term, attribute, value) VALUES ('0000009','custom_name','First rib backfat');
+INSERT INTO details (term, attribute, value) VALUES ('0000009','abbreviat','FRIBF');
+INSERT INTO details (term, attribute, value) VALUES ('0000009','measurement','Ruler');
+INSERT INTO details (term, attribute, value) VALUES ('0000010','abbreviat','14FRBF');
+INSERT INTO details (term, attribute, value) VALUES ('0000010','trait_name','backfat at first rib (measured at 14 weeks of age)');
+INSERT INTO details (term, attribute, value) VALUES ('0000010','trait_desc','Backfat thickness');
+INSERT INTO details (term, attribute, value) VALUES ('0000011','abbreviat','26FRBF');
+INSERT INTO details (term, attribute, value) VALUES ('0000011','trait_name','backfat at first rib (measured at 26 weeks of age)');
+INSERT INTO details (term, attribute, value) VALUES ('0000011','trait_desc','Backfat thickness');
+INSERT INTO details (term, attribute, value) VALUES ('0000012','trait_name','backfat above muscle dorsi');
+INSERT INTO details (term, attribute, value) VALUES ('0000012','trait_desc','Backfat thickness');
+INSERT INTO details (term, attribute, value) VALUES ('0000012','scale_unit','cm');
+INSERT INTO details (term, attribute, value) VALUES ('0000012','measurement','Ruler');
+INSERT INTO details (term, attribute, value) VALUES ('0000013','trait_desc','Backfat thickness');
+INSERT INTO details (term, attribute, value) VALUES ('0000013','trait_name','backfat thickness at last rib');
+INSERT INTO details (term, attribute, value) VALUES ('0000013','scale_unit','cm');
+INSERT INTO details (term, attribute, value) VALUES ('0000013','abbreviat','LRIBF');
+INSERT INTO details (term, attribute, value) VALUES ('0000013','measurement','Ruler');
+INSERT INTO details (term, attribute, value) VALUES ('0000014','trait_name','backfat depth at last rib');
+INSERT INTO details (term, attribute, value) VALUES ('0000014','abbreviat','LRIBFD');
+INSERT INTO details (term, attribute, value) VALUES ('0000015','abbreviat','14LRIBF');
+INSERT INTO details (term, attribute, value) VALUES ('0000015','trait_name','backfat at last rib (measured at 14 weeks of age)');
+INSERT INTO details (term, attribute, value) VALUES ('0000015','trait_desc','Backfat thickness');
+INSERT INTO details (term, attribute, value) VALUES ('0000016','abbreviat','26LRIBF');
+INSERT INTO details (term, attribute, value) VALUES ('0000016','trait_name','backfat at last rib (measured at 26 weeks of age)');
+INSERT INTO details (term, attribute, value) VALUES ('0000016','trait_desc','Backfat thickness');
+INSERT INTO details (term, attribute, value) VALUES ('0000017','trait_name','backfat at P2 position');
+INSERT INTO details (term, attribute, value) VALUES ('0000017','trait_desc','Backfat thickness');
+INSERT INTO details (term, attribute, value) VALUES ('0000017','scale_unit','cm');
+INSERT INTO details (term, attribute, value) VALUES ('0000017','measurement','Ruler');
+INSERT INTO details (term, attribute, value) VALUES ('0000018','trait_name','backfat at shoulder');
+INSERT INTO details (term, attribute, value) VALUES ('0000018','trait_desc','Backfat thickness');
+INSERT INTO details (term, attribute, value) VALUES ('0000018','abbreviat','BFSHO');
+INSERT INTO details (term, attribute, value) VALUES ('0000018','scale_unit','cm; mm');
+INSERT INTO details (term, attribute, value) VALUES ('0000018','measurement','Ruler');
+INSERT INTO details (term, attribute, value) VALUES ('0000019','abbreviat','10thribBF');
+INSERT INTO details (term, attribute, value) VALUES ('0000019','trait_name','backfat at tenth rib');
+INSERT INTO details (term, attribute, value) VALUES ('0000019','trait_desc','Backfat thickness');
+INSERT INTO details (term, attribute, value) VALUES ('0000019','scale_unit','cm; mm');
+INSERT INTO details (term, attribute, value) VALUES ('0000019','measurement','Ruler');
+INSERT INTO details (term, attribute, value) VALUES ('0000019','custom_name','Tenth rib backfat');
+INSERT INTO details (term, attribute, value) VALUES ('0000020','abbreviat','34ribBF');
+INSERT INTO details (term, attribute, value) VALUES ('0000020','trait_name','backfat between 3th and 4th rib');
+INSERT INTO details (term, attribute, value) VALUES ('0000020','trait_desc','Backfat thickness');
+INSERT INTO details (term, attribute, value) VALUES ('0000020','scale_unit','cm; mm');
+INSERT INTO details (term, attribute, value) VALUES ('0000020','measurement','Ruler');
+INSERT INTO details (term, attribute, value) VALUES ('0000021','abbreviat','67ribBF');
+INSERT INTO details (term, attribute, value) VALUES ('0000021','trait_name','backfat between 6th and 7th rib');
+INSERT INTO details (term, attribute, value) VALUES ('0000022','trait_name','backfat depth at max. mus. depth');
+INSERT INTO details (term, attribute, value) VALUES ('0000022','trait_desc','Backfat thickness');
+INSERT INTO details (term, attribute, value) VALUES ('0000022','scale_unit','cm; mm');
+INSERT INTO details (term, attribute, value) VALUES ('0000022','measurement','Ruler');
+INSERT INTO details (term, attribute, value) VALUES ('0000023','trait_name','backfat at last lumbar');
+INSERT INTO details (term, attribute, value) VALUES ('0000023','trait_desc','Backfat thickness');
+INSERT INTO details (term, attribute, value) VALUES ('0000023','scale_unit','cm; mm');
+INSERT INTO details (term, attribute, value) VALUES ('0000023','custom_name','Lumbar back fat');
+INSERT INTO details (term, attribute, value) VALUES ('0000023','abbreviat','LUMBF');
+INSERT INTO details (term, attribute, value) VALUES ('0000023','measurement','Ruler');
+INSERT INTO details (term, attribute, value) VALUES ('0000024','trait_name','backfat between the last 3th and 4th lumbar');
+INSERT INTO details (term, attribute, value) VALUES ('0000024','abbreviat','LUMBF');
+INSERT INTO details (term, attribute, value) VALUES ('0000025','abbreviat','14LUMBF');
+INSERT INTO details (term, attribute, value) VALUES ('0000025','trait_name','backfat at last lumbar (measured at 14 weeks of age)');
+INSERT INTO details (term, attribute, value) VALUES ('0000025','trait_desc','Backfat thickness');
+INSERT INTO details (term, attribute, value) VALUES ('0000026','abbreviat','26LUMBF');
+INSERT INTO details (term, attribute, value) VALUES ('0000026','trait_name','backfat at last lumbar (measured at 26 weeks of age)');
+INSERT INTO details (term, attribute, value) VALUES ('0000026','trait_desc','Backfat thickness');
+INSERT INTO details (term, attribute, value) VALUES ('0000027','trait_name','backfat at rump');
+INSERT INTO details (term, attribute, value) VALUES ('0000027','trait_desc','Backfat thickness');
+INSERT INTO details (term, attribute, value) VALUES ('0000027','abbreviat','BFTR');
+INSERT INTO details (term, attribute, value) VALUES ('0000027','custom_name','Rear backfat (RBT)');
+INSERT INTO details (term, attribute, value) VALUES ('0000028','trait_name','backfat middle');
+INSERT INTO details (term, attribute, value) VALUES ('0000028','trait_desc','Backfat thickness at the mid-point of the body length.');
+INSERT INTO details (term, attribute, value) VALUES ('0000028','abbreviat','BFM');
+INSERT INTO details (term, attribute, value) VALUES ('0000028','scale_unit','cm; mm');
+INSERT INTO details (term, attribute, value) VALUES ('0000028','measurement','Ruler');
+INSERT INTO details (term, attribute, value) VALUES ('0000029','trait_name','backfat side');
+INSERT INTO details (term, attribute, value) VALUES ('0000029','trait_desc','Backfat thickness');
+INSERT INTO details (term, attribute, value) VALUES ('0000029','abbreviat','BFS');
+INSERT INTO details (term, attribute, value) VALUES ('0000029','scale_unit','cm; mm');
+INSERT INTO details (term, attribute, value) VALUES ('0000029','measurement','Ruler');
+INSERT INTO details (term, attribute, value) VALUES ('0000030','trait_name','backfat (13 weeks of age)');
+INSERT INTO details (term, attribute, value) VALUES ('0000030','trait_desc','Backfat thickness');
+INSERT INTO details (term, attribute, value) VALUES ('0000030','abbreviat','BF13w');
+INSERT INTO details (term, attribute, value) VALUES ('0000030','measurement','Ruler');
+INSERT INTO details (term, attribute, value) VALUES ('0000031','trait_name','backfat (17 weeks of age)');
+INSERT INTO details (term, attribute, value) VALUES ('0000031','trait_desc','Backfat thickness');
+INSERT INTO details (term, attribute, value) VALUES ('0000031','abbreviat','BF17w');
+INSERT INTO details (term, attribute, value) VALUES ('0000031','measurement','Ruler');
+INSERT INTO details (term, attribute, value) VALUES ('0000032','trait_name','backfat (22 weeks of age)');
+INSERT INTO details (term, attribute, value) VALUES ('0000032','trait_desc','Backfat thickness');
+INSERT INTO details (term, attribute, value) VALUES ('0000032','abbreviat','BF22w');
+INSERT INTO details (term, attribute, value) VALUES ('0000032','measurement','Ruler');
+INSERT INTO details (term, attribute, value) VALUES ('0000033','trait_name','backfat (40 kg live weight)');
+INSERT INTO details (term, attribute, value) VALUES ('0000033','trait_desc','Backfat thickness');
+INSERT INTO details (term, attribute, value) VALUES ('0000033','abbreviat','BF40k');
+INSERT INTO details (term, attribute, value) VALUES ('0000033','measurement','Ruler');
+INSERT INTO details (term, attribute, value) VALUES ('0000034','trait_name','backfat (60 kg live weight)');
+INSERT INTO details (term, attribute, value) VALUES ('0000034','trait_desc','Backfat thickness');
+INSERT INTO details (term, attribute, value) VALUES ('0000034','abbreviat','BF60k');
+INSERT INTO details (term, attribute, value) VALUES ('0000034','measurement','Ruler');
+INSERT INTO details (term, attribute, value) VALUES ('0000035','scale_unit','%');
+INSERT INTO details (term, attribute, value) VALUES ('0000035','trait_name','fat percentage in carcass');
+INSERT INTO details (term, attribute, value) VALUES ('0000036','trait_name','fat area');
+INSERT INTO details (term, attribute, value) VALUES ('0000037','trait_name','fat weight (total)');
+INSERT INTO details (term, attribute, value) VALUES ('0000037','abbreviat','FW');
+INSERT INTO details (term, attribute, value) VALUES ('0000038','scale_unit','g');
+INSERT INTO details (term, attribute, value) VALUES ('0000038','abbreviat','IMF');
+INSERT INTO details (term, attribute, value) VALUES ('0000038','trait_name','intermuscular fat weight');
+INSERT INTO details (term, attribute, value) VALUES ('0000039','scale_unit','%');
+INSERT INTO details (term, attribute, value) VALUES ('0000039','abbreviat','IMF');
+INSERT INTO details (term, attribute, value) VALUES ('0000039','custom_name','intramuscular fat content');
+INSERT INTO details (term, attribute, value) VALUES ('0000039','trait_name','intramuscular fat percentage');
+INSERT INTO details (term, attribute, value) VALUES ('0000040','trait_name','backfat weight');
+INSERT INTO details (term, attribute, value) VALUES ('0000040','abbreviat','BFW');
+INSERT INTO details (term, attribute, value) VALUES ('0000040','custom_name','BFW');
+INSERT INTO details (term, attribute, value) VALUES ('0000040','scale_unit','kg');
+INSERT INTO details (term, attribute, value) VALUES ('0000041','scale_unit','kg');
+INSERT INTO details (term, attribute, value) VALUES ('0000041','trait_name','leaf fat weight');
+INSERT INTO details (term, attribute, value) VALUES ('0000041','abbreviat','LFW');
+INSERT INTO details (term, attribute, value) VALUES ('0000042','trait_name','leaf fat percentage');
+INSERT INTO details (term, attribute, value) VALUES ('0000042','trait_desc','leaf fat to carcass percent by weight');
+INSERT INTO details (term, attribute, value) VALUES ('0000042','abbreviat','LFP');
+INSERT INTO details (term, attribute, value) VALUES ('0000043','abbreviat','CFW');
+INSERT INTO details (term, attribute, value) VALUES ('0000043','trait_name','intestinal fat weight');
+INSERT INTO details (term, attribute, value) VALUES ('0000044','abbreviat','CFP');
+INSERT INTO details (term, attribute, value) VALUES ('0000044','trait_name','intestinal fat percent');
+INSERT INTO details (term, attribute, value) VALUES ('0000044','trait_desc','intestinal fat to carcass percent by weight');
+INSERT INTO details (term, attribute, value) VALUES ('0000045','abbreviat','IFR');
+INSERT INTO details (term, attribute, value) VALUES ('0000045','trait_name','internal fat ratio');
+INSERT INTO details (term, attribute, value) VALUES ('0000046','trait_name','fat ratio (percentage)');
+INSERT INTO details (term, attribute, value) VALUES ('0000046','abbreviat','FP');
+INSERT INTO details (term, attribute, value) VALUES ('0000047','scale_unit','%');
+INSERT INTO details (term, attribute, value) VALUES ('0000047','abbreviat','BLFATP');
+INSERT INTO details (term, attribute, value) VALUES ('0000047','trait_name','Percentage of backfat and leaf fat in carcass');
+INSERT INTO details (term, attribute, value) VALUES ('0000047','trait_desc','Sum of subcutaenous body fat and internal fat expressed as percentage of carcass weight.');
+INSERT INTO details (term, attribute, value) VALUES ('0000048','abbreviat','MARB');
+INSERT INTO details (term, attribute, value) VALUES ('0000048','trait_name','marbling');
+INSERT INTO details (term, attribute, value) VALUES ('0000048','scale_unit','score');
+INSERT INTO details (term, attribute, value) VALUES ('0000048','trait_desc','Small visible streaks of fat within a meat cut.');
+INSERT INTO details (term, attribute, value) VALUES ('0000049','trait_name','residual fatty acids');
+INSERT INTO details (term, attribute, value) VALUES ('0000050','trait_name','side fat');
+INSERT INTO details (term, attribute, value) VALUES ('0000051','scale_unit','mm');
+INSERT INTO details (term, attribute, value) VALUES ('0000051','custom_name','SUBCFAT');
+INSERT INTO details (term, attribute, value) VALUES ('0000051','trait_name','subcutaneous fat depth');
+INSERT INTO details (term, attribute, value) VALUES ('0000052','trait_name','subcutaneous fat weight');
+INSERT INTO details (term, attribute, value) VALUES ('0000053','trait_name','sum of all fatty acids');
+INSERT INTO details (term, attribute, value) VALUES ('0000054','scale_unit','%');
+INSERT INTO details (term, attribute, value) VALUES ('0000054','trait_name','total lipid');
+INSERT INTO details (term, attribute, value) VALUES ('0000055','trait_name','color a');
+INSERT INTO details (term, attribute, value) VALUES ('0000055','abbreviat','mcolor');
+INSERT INTO details (term, attribute, value) VALUES ('0000055','trait_desc','Objective color variable measured by colorimeter: Redness');
+INSERT INTO details (term, attribute, value) VALUES ('0000056','trait_name','color b');
+INSERT INTO details (term, attribute, value) VALUES ('0000056','abbreviat','mcolor');
+INSERT INTO details (term, attribute, value) VALUES ('0000056','trait_desc','Objective color variable measured by colorimeter: Yelowness');
+INSERT INTO details (term, attribute, value) VALUES ('0000057','trait_name','color L');
+INSERT INTO details (term, attribute, value) VALUES ('0000057','abbreviat','mcolor');
+INSERT INTO details (term, attribute, value) VALUES ('0000057','trait_desc','Objective color variable measured by colorimeter: Lightness');
+INSERT INTO details (term, attribute, value) VALUES ('0000058','trait_name','hue');
+INSERT INTO details (term, attribute, value) VALUES ('0000058','abbreviat','mcolor');
+INSERT INTO details (term, attribute, value) VALUES ('0000059','abbreviat','mcolor');
+INSERT INTO details (term, attribute, value) VALUES ('0000059','trait_name','meat brightness');
+INSERT INTO details (term, attribute, value) VALUES ('0000060','trait_name','light reflection');
+INSERT INTO details (term, attribute, value) VALUES ('0000060','abbreviat','mcolor');
+INSERT INTO details (term, attribute, value) VALUES ('0000060','custom_name','Reflectance value');
+INSERT INTO details (term, attribute, value) VALUES ('0000060','trait_desc','Various reflectance values are used to measure meat color, to quantitate myoglobin forms. It closely relates to what the eye and brain see.');
+INSERT INTO details (term, attribute, value) VALUES ('0000061','trait_name','color score');
+INSERT INTO details (term, attribute, value) VALUES ('0000061','abbreviat','mcolor');
+INSERT INTO details (term, attribute, value) VALUES ('0000061','trait_desc','Objective scores.');
+INSERT INTO details (term, attribute, value) VALUES ('0000061','scale_unit','score');
+INSERT INTO details (term, attribute, value) VALUES ('0000062','custom_name','Hematin');
+INSERT INTO details (term, attribute, value) VALUES ('0000062','trait_name','Hematin pigmentation');
+INSERT INTO details (term, attribute, value) VALUES ('0000062','abbreviat','mcolor');
+INSERT INTO details (term, attribute, value) VALUES ('0000062','trait_desc','Pigment content in meat.');
+INSERT INTO details (term, attribute, value) VALUES ('0000062','scale_unit','ug/g');
+INSERT INTO details (term, attribute, value) VALUES ('0000063','abbreviat','pH');
+INSERT INTO details (term, attribute, value) VALUES ('0000063','trait_name','pH 24 hours post mortem (loin)');
+INSERT INTO details (term, attribute, value) VALUES ('0000064','abbreviat','pH');
+INSERT INTO details (term, attribute, value) VALUES ('0000064','trait_name','pH 24 hours post mortem (ham)');
+INSERT INTO details (term, attribute, value) VALUES ('0000065','abbreviat','pH');
+INSERT INTO details (term, attribute, value) VALUES ('0000065','trait_name','pH 45 minutes post mortem');
+INSERT INTO details (term, attribute, value) VALUES ('0000066','abbreviat','pH');
+INSERT INTO details (term, attribute, value) VALUES ('0000066','trait_name','pH for Biceps Femoris');
+INSERT INTO details (term, attribute, value) VALUES ('0000067','abbreviat','pH');
+INSERT INTO details (term, attribute, value) VALUES ('0000067','trait_name','pH for Semispinalis Dorsi');
+INSERT INTO details (term, attribute, value) VALUES ('0000068','abbreviat','pH');
+INSERT INTO details (term, attribute, value) VALUES ('0000068','trait_name','pH for Longissmus Dorsi');
+INSERT INTO details (term, attribute, value) VALUES ('0000069','trait_name','conductivity 45 minutes post mortem');
+INSERT INTO details (term, attribute, value) VALUES ('0000070','trait_name','conductivity 24 hours post mortem');
+INSERT INTO details (term, attribute, value) VALUES ('0000071','abbreviat','CK test');
+INSERT INTO details (term, attribute, value) VALUES ('0000071','trait_name','Creatine-phospho-kinase test');
+INSERT INTO details (term, attribute, value) VALUES ('0000072','trait_desc','A process in which meat becomes rigid post mortum.');
+INSERT INTO details (term, attribute, value) VALUES ('0000072','abbreviat','rigor');
+INSERT INTO details (term, attribute, value) VALUES ('0000072','trait_name','Rigor mortis');
+INSERT INTO details (term, attribute, value) VALUES ('0000073','trait_name','average instron (star probe) force');
+INSERT INTO details (term, attribute, value) VALUES ('0000073','scale_unit','Kg');
+INSERT INTO details (term, attribute, value) VALUES ('0000074','trait_name','chew score');
+INSERT INTO details (term, attribute, value) VALUES ('0000074','measurement','Objective scores.');
+INSERT INTO details (term, attribute, value) VALUES ('0000075','scale_unit','%');
+INSERT INTO details (term, attribute, value) VALUES ('0000075','trait_name','cooking loss');
+INSERT INTO details (term, attribute, value) VALUES ('0000076','trait_name','drip loss');
+INSERT INTO details (term, attribute, value) VALUES ('0000076','abbreviat','dripl');
+INSERT INTO details (term, attribute, value) VALUES ('0000076','trait_desc','Water holding capacity predicted through drip loss in the longissimus muscle during 48 h. (%)');
+INSERT INTO details (term, attribute, value) VALUES ('0000077','trait_desc','Fiber number on longgissimus dorsi between 13/14 ribs.');
+INSERT INTO details (term, attribute, value) VALUES ('0000077','trait_name','Number of white fibers');
+INSERT INTO details (term, attribute, value) VALUES ('0000077','abbreviat','numfib');
+INSERT INTO details (term, attribute, value) VALUES ('0000078','trait_desc','Fiber percentage on longgissimus dorsi between 13/14 ribs.');
+INSERT INTO details (term, attribute, value) VALUES ('0000078','trait_name','Percentage of white fibers');
+INSERT INTO details (term, attribute, value) VALUES ('0000078','abbreviat','percfiber');
+INSERT INTO details (term, attribute, value) VALUES ('0000079','abbreviat','dfiber');
+INSERT INTO details (term, attribute, value) VALUES ('0000079','trait_name','Diameter of white fibers');
+INSERT INTO details (term, attribute, value) VALUES ('0000079','trait_desc','Fiber diameter on longgissimus dorsi between 13/14 ribs.');
+INSERT INTO details (term, attribute, value) VALUES ('0000080','trait_desc','R value is defined as the reflectance R8 of a meat sample so thick that further increases in thickness fail to change the reflectance; it describes the degree of desamination of adenosine');
+INSERT INTO details (term, attribute, value) VALUES ('0000080','trait_name','R-value');
+INSERT INTO details (term, attribute, value) VALUES ('0000080','abbreviat','r-value');
+INSERT INTO details (term, attribute, value) VALUES ('0000081','abbreviat','rdr');
+INSERT INTO details (term, attribute, value) VALUES ('0000081','trait_name','R-value / Diameter of white fibers');
+INSERT INTO details (term, attribute, value) VALUES ('0000082','trait_name','Lactate / Diameter of white fibers');
+INSERT INTO details (term, attribute, value) VALUES ('0000082','abbreviat','ldr');
+INSERT INTO details (term, attribute, value) VALUES ('0000083','trait_name','fiber type 1');
+INSERT INTO details (term, attribute, value) VALUES ('0000084','trait_name','fiber type 2 ratio');
+INSERT INTO details (term, attribute, value) VALUES ('0000085','trait_name','firmness');
+INSERT INTO details (term, attribute, value) VALUES ('0000086','trait_name','percent cooking loss');
+INSERT INTO details (term, attribute, value) VALUES ('0000087','trait_name','shear force');
+INSERT INTO details (term, attribute, value) VALUES ('0000088','measurement','Objective scores.');
+INSERT INTO details (term, attribute, value) VALUES ('0000088','trait_name','tenderness score');
+INSERT INTO details (term, attribute, value) VALUES ('0000089','scale_unit','g');
+INSERT INTO details (term, attribute, value) VALUES ('0000089','trait_desc','The ability of meat to retain its water during cutting, grinding, heating, pressing, etc');
+INSERT INTO details (term, attribute, value) VALUES ('0000089','trait_name','water holding capacity');
+INSERT INTO details (term, attribute, value) VALUES ('0000089','abbreviat','WHC');
+INSERT INTO details (term, attribute, value) VALUES ('0000090','abbreviat','moist');
+INSERT INTO details (term, attribute, value) VALUES ('0000090','trait_name','Moisture Content');
+INSERT INTO details (term, attribute, value) VALUES ('0000091','trait_name','androstenone, laboratory');
+INSERT INTO details (term, attribute, value) VALUES ('0000092','trait_name','average glycogen');
+INSERT INTO details (term, attribute, value) VALUES ('0000092','abbreviat','GLY');
+INSERT INTO details (term, attribute, value) VALUES ('0000092','measurement','mmol/g');
+INSERT INTO details (term, attribute, value) VALUES ('0000092','scale_unit','umol/g');
+INSERT INTO details (term, attribute, value) VALUES ('0000093','trait_name','average glycolytic potential');
+INSERT INTO details (term, attribute, value) VALUES ('0000093','abbreviat','GLYPO');
+INSERT INTO details (term, attribute, value) VALUES ('0000093','measurement','mmol/g');
+INSERT INTO details (term, attribute, value) VALUES ('0000093','scale_unit','umol/g');
+INSERT INTO details (term, attribute, value) VALUES ('0000094','trait_name','average lactate');
+INSERT INTO details (term, attribute, value) VALUES ('0000094','abbreviat','LACT');
+INSERT INTO details (term, attribute, value) VALUES ('0000094','measurement','mmol/g');
+INSERT INTO details (term, attribute, value) VALUES ('0000094','scale_unit','umol/g');
+INSERT INTO details (term, attribute, value) VALUES ('0000095','trait_desc','Blood cholesterol concentration');
+INSERT INTO details (term, attribute, value) VALUES ('0000095','trait_name','cholesterol');
+INSERT INTO details (term, attribute, value) VALUES ('0000095','scale_unit','mg/dl');
+INSERT INTO details (term, attribute, value) VALUES ('0000096','trait_name','indole, laboratory');
+INSERT INTO details (term, attribute, value) VALUES ('0000097','trait_name','muscle moisture percentage');
+INSERT INTO details (term, attribute, value) VALUES ('0000098','trait_name','muscle protein percentage');
+INSERT INTO details (term, attribute, value) VALUES ('0000099','trait_name','pork flavour in fat');
+INSERT INTO details (term, attribute, value) VALUES ('0000100','trait_name','pork flavour in lean');
+INSERT INTO details (term, attribute, value) VALUES ('0000101','trait_name','skatole, laboratory');
+INSERT INTO details (term, attribute, value) VALUES ('0000102','trait_name','androstenone, taste panel');
+INSERT INTO details (term, attribute, value) VALUES ('0000103','trait_name','skatole, taste panel');
+INSERT INTO details (term, attribute, value) VALUES ('0000104','trait_name','subjective abnormal flavour in fat');
+INSERT INTO details (term, attribute, value) VALUES ('0000105','trait_name','subjective abnormal flavour in lean');
+INSERT INTO details (term, attribute, value) VALUES ('0000106','trait_name','subjective boar flavor in fat');
+INSERT INTO details (term, attribute, value) VALUES ('0000107','trait_name','subjective boar flavor in lean');
+INSERT INTO details (term, attribute, value) VALUES ('0000108','measurement','Objective scores.');
+INSERT INTO details (term, attribute, value) VALUES ('0000108','trait_name','subjective chew score');
+INSERT INTO details (term, attribute, value) VALUES ('0000109','measurement','Objective scores.');
+INSERT INTO details (term, attribute, value) VALUES ('0000109','trait_name','subjective flavor score');
+INSERT INTO details (term, attribute, value) VALUES ('0000110','measurement','Objective scores.');
+INSERT INTO details (term, attribute, value) VALUES ('0000110','trait_name','subjective juiciness score');
+INSERT INTO details (term, attribute, value) VALUES ('0000111','trait_name','subjective pork flavor in fat');
+INSERT INTO details (term, attribute, value) VALUES ('0000112','trait_name','subjective pork flavor in lean');
+INSERT INTO details (term, attribute, value) VALUES ('0000113','measurement','Objective scores.');
+INSERT INTO details (term, attribute, value) VALUES ('0000113','trait_name','subjective tenderness score');
+INSERT INTO details (term, attribute, value) VALUES ('0000114','trait_desc','Any flavor that is not associated with normal pork flavor.');
+INSERT INTO details (term, attribute, value) VALUES ('0000114','measurement','Objective scores.');
+INSERT INTO details (term, attribute, value) VALUES ('0000114','custom_name','off-flavor');
+INSERT INTO details (term, attribute, value) VALUES ('0000114','trait_name','subjective off-flavor score');
+INSERT INTO details (term, attribute, value) VALUES ('0000115','trait_name','intensity taste');
+INSERT INTO details (term, attribute, value) VALUES ('0000115','abbreviat','itaste');
+INSERT INTO details (term, attribute, value) VALUES ('0000116','trait_name','subjective abnormal odor');
+INSERT INTO details (term, attribute, value) VALUES ('0000117','trait_name','subjective overall acceptibility score');
+INSERT INTO details (term, attribute, value) VALUES ('0000118','trait_name','subjective pork odour');
+INSERT INTO details (term, attribute, value) VALUES ('0000119','abbreviat','ISMEL');
+INSERT INTO details (term, attribute, value) VALUES ('0000119','trait_name','smell intensity');
+INSERT INTO details (term, attribute, value) VALUES ('0000120','abbreviat','ISMELF');
+INSERT INTO details (term, attribute, value) VALUES ('0000120','trait_name','smell intensity - fat');
+INSERT INTO details (term, attribute, value) VALUES ('0000121','abbreviat','SASML');
+INSERT INTO details (term, attribute, value) VALUES ('0000121','trait_name','Sub-acid smell');
+INSERT INTO details (term, attribute, value) VALUES ('0000122','scale_unit','%');
+INSERT INTO details (term, attribute, value) VALUES ('0000122','abbreviat','BMI');
+INSERT INTO details (term, attribute, value) VALUES ('0000122','trait_desc','BMI = weight at slaughter / carcass length');
+INSERT INTO details (term, attribute, value) VALUES ('0000122','trait_name','body mass index');
+INSERT INTO details (term, attribute, value) VALUES ('0000123','trait_name','bone weight');
+INSERT INTO details (term, attribute, value) VALUES ('0000124','trait_name','bone percent');
+INSERT INTO details (term, attribute, value) VALUES ('0000124','abbreviat','BP');
+INSERT INTO details (term, attribute, value) VALUES ('0000125','scale_unit','%');
+INSERT INTO details (term, attribute, value) VALUES ('0000125','abbreviat','BLR');
+INSERT INTO details (term, attribute, value) VALUES ('0000125','trait_name','bone/lean meat ratio in ham');
+INSERT INTO details (term, attribute, value) VALUES ('0000126','scale_unit','%');
+INSERT INTO details (term, attribute, value) VALUES ('0000126','abbreviat','LBp');
+INSERT INTO details (term, attribute, value) VALUES ('0000126','trait_name','Lean meat + bone in ham + back');
+INSERT INTO details (term, attribute, value) VALUES ('0000127','scale_unit','kg');
+INSERT INTO details (term, attribute, value) VALUES ('0000127','trait_name','Lean mass (weight)');
+INSERT INTO details (term, attribute, value) VALUES ('0000127','abbreviat','leanwt');
+INSERT INTO details (term, attribute, value) VALUES ('0000128','scale_unit','%');
+INSERT INTO details (term, attribute, value) VALUES ('0000128','abbreviat','Lbpback');
+INSERT INTO details (term, attribute, value) VALUES ('0000128','trait_name','Lean meat + bone in back');
+INSERT INTO details (term, attribute, value) VALUES ('0000129','scale_unit','%');
+INSERT INTO details (term, attribute, value) VALUES ('0000129','trait_name','Backfat percentage');
+INSERT INTO details (term, attribute, value) VALUES ('0000129','abbreviat','BFP');
+INSERT INTO details (term, attribute, value) VALUES ('0000130','scale_unit','%');
+INSERT INTO details (term, attribute, value) VALUES ('0000130','trait_desc','carcass fat percentage');
+INSERT INTO details (term, attribute, value) VALUES ('0000130','abbreviat','FATCP');
+INSERT INTO details (term, attribute, value) VALUES ('0000130','trait_name','Fat-cut percentage');
+INSERT INTO details (term, attribute, value) VALUES ('0000131','trait_name','belly weight');
+INSERT INTO details (term, attribute, value) VALUES ('0000131','abbreviat','bellywt');
+INSERT INTO details (term, attribute, value) VALUES ('0000132','trait_desc','= 4belly weight / carcass weight');
+INSERT INTO details (term, attribute, value) VALUES ('0000132','trait_name','belly percentage');
+INSERT INTO details (term, attribute, value) VALUES ('0000132','abbreviat','bellyp');
+INSERT INTO details (term, attribute, value) VALUES ('0000133','trait_name','carcass length');
+INSERT INTO details (term, attribute, value) VALUES ('0000133','scale_unit','cm');
+INSERT INTO details (term, attribute, value) VALUES ('0000133','abbreviat','crcl');
+INSERT INTO details (term, attribute, value) VALUES ('0000133','measurement','crcl');
+INSERT INTO details (term, attribute, value) VALUES ('0000134','trait_name','carcass weight (cold)');
+INSERT INTO details (term, attribute, value) VALUES ('0000134','abbreviat','CCWT');
+INSERT INTO details (term, attribute, value) VALUES ('0000135','trait_name','Carcass yield');
+INSERT INTO details (term, attribute, value) VALUES ('0000135','abbreviat','CYIELD');
+INSERT INTO details (term, attribute, value) VALUES ('0000136','trait_name','carcass fat free weight');
+INSERT INTO details (term, attribute, value) VALUES ('0000136','abbreviat','CWNOFAT');
+INSERT INTO details (term, attribute, value) VALUES ('0000137','custom_name','HCWT');
+INSERT INTO details (term, attribute, value) VALUES ('0000137','trait_name','hot carcass weight');
+INSERT INTO details (term, attribute, value) VALUES ('0000138','scale_unit','%');
+INSERT INTO details (term, attribute, value) VALUES ('0000138','measurement','Carcass Weight / Live Weight X 100');
+INSERT INTO details (term, attribute, value) VALUES ('0000138','abbreviat','dressing');
+INSERT INTO details (term, attribute, value) VALUES ('0000138','custom_name','dressing');
+INSERT INTO details (term, attribute, value) VALUES ('0000138','trait_name','dressing percentage');
+INSERT INTO details (term, attribute, value) VALUES ('0000138','trait_desc','The percentage of the live animal that ends up as carcass');
+INSERT INTO details (term, attribute, value) VALUES ('0000139','trait_name','diaphragm weight');
+INSERT INTO details (term, attribute, value) VALUES ('0000140','trait_desc','Between the 3rd and 4th rib');
+INSERT INTO details (term, attribute, value) VALUES ('0000140','trait_name','eye muscle depth');
+INSERT INTO details (term, attribute, value) VALUES ('0000141','trait_name','Feet weight');
+INSERT INTO details (term, attribute, value) VALUES ('0000141','abbreviat','feetwt');
+INSERT INTO details (term, attribute, value) VALUES ('0000142','trait_name','foreloin weight post-dissection');
+INSERT INTO details (term, attribute, value) VALUES ('0000143','trait_name','foreloin weight pre-dissection');
+INSERT INTO details (term, attribute, value) VALUES ('0000144','trait_name','head weight');
+INSERT INTO details (term, attribute, value) VALUES ('0000144','abbreviat','headwt');
+INSERT INTO details (term, attribute, value) VALUES ('0000145','scale_unit','%');
+INSERT INTO details (term, attribute, value) VALUES ('0000145','trait_name','lean percentage');
+INSERT INTO details (term, attribute, value) VALUES ('0000145','abbreviat','leanp');
+INSERT INTO details (term, attribute, value) VALUES ('0000145','custom_name','Meat percentage');
+INSERT INTO details (term, attribute, value) VALUES ('0000146','scale_unit','%');
+INSERT INTO details (term, attribute, value) VALUES ('0000146','trait_name','ham percent');
+INSERT INTO details (term, attribute, value) VALUES ('0000146','abbreviat','hamp');
+INSERT INTO details (term, attribute, value) VALUES ('0000147','trait_name','lean thickness between 3th and 4th rib');
+INSERT INTO details (term, attribute, value) VALUES ('0000148','scale_unit','(cm) square');
+INSERT INTO details (term, attribute, value) VALUES ('0000148','abbreviat','LEA');
+INSERT INTO details (term, attribute, value) VALUES ('0000148','trait_name','loin eye area');
+INSERT INTO details (term, attribute, value) VALUES ('0000148','measurement','loineyea');
+INSERT INTO details (term, attribute, value) VALUES ('0000148','custom_name','longissmus muscle area');
+INSERT INTO details (term, attribute, value) VALUES ('0000149','abbreviat','loinlength');
+INSERT INTO details (term, attribute, value) VALUES ('0000149','trait_name','Longissimus muscle length');
+INSERT INTO details (term, attribute, value) VALUES ('0000150','trait_name','muscle + diaphragm weight');
+INSERT INTO details (term, attribute, value) VALUES ('0000151','abbreviat','leanwt');
+INSERT INTO details (term, attribute, value) VALUES ('0000151','trait_name','muscle weight');
+INSERT INTO details (term, attribute, value) VALUES ('0000152','scale_unit','kg');
+INSERT INTO details (term, attribute, value) VALUES ('0000152','trait_name','Loin weight');
+INSERT INTO details (term, attribute, value) VALUES ('0000152','abbreviat','loinwt');
+INSERT INTO details (term, attribute, value) VALUES ('0000153','scale_unit','%');
+INSERT INTO details (term, attribute, value) VALUES ('0000153','trait_name','Loin percent');
+INSERT INTO details (term, attribute, value) VALUES ('0000153','abbreviat','loinp');
+INSERT INTO details (term, attribute, value) VALUES ('0000154','trait_name','Ham weight');
+INSERT INTO details (term, attribute, value) VALUES ('0000154','abbreviat','hamwt');
+INSERT INTO details (term, attribute, value) VALUES ('0000154','scale_unit','kg');
+INSERT INTO details (term, attribute, value) VALUES ('0000155','scale_unit','%');
+INSERT INTO details (term, attribute, value) VALUES ('0000155','abbreviat','ECLC');
+INSERT INTO details (term, attribute, value) VALUES ('0000155','measurement','ECLC =-3 .539 +75 .1 (proportion of ham) +121.6 (proportion of loin) -61 (proportion of backfat) -45.3 (proportion of leaf fat) +32.8 (proportion of belly)');
+INSERT INTO details (term, attribute, value) VALUES ('0000155','trait_name','Estimated carcass lean content');
+INSERT INTO details (term, attribute, value) VALUES ('0000155','custom_name','lean content');
+INSERT INTO details (term, attribute, value) VALUES ('0000156','scale_unit','%');
+INSERT INTO details (term, attribute, value) VALUES ('0000156','custom_name','lean percentage');
+INSERT INTO details (term, attribute, value) VALUES ('0000156','abbreviat','LHP');
+INSERT INTO details (term, attribute, value) VALUES ('0000156','trait_name','Loin and ham percentage in carcass');
+INSERT INTO details (term, attribute, value) VALUES ('0000156','trait_desc','Percentage portion of Loin and Ham weight over carcass weight');
+INSERT INTO details (term, attribute, value) VALUES ('0000157','scale_unit','kg');
+INSERT INTO details (term, attribute, value) VALUES ('0000157','trait_name','Shoulder weight');
+INSERT INTO details (term, attribute, value) VALUES ('0000157','abbreviat','SHOUWT');
+INSERT INTO details (term, attribute, value) VALUES ('0000158','abbreviat','Lmdepth');
+INSERT INTO details (term, attribute, value) VALUES ('0000158','custom_name','loin height');
+INSERT INTO details (term, attribute, value) VALUES ('0000158','trait_name','Loin muscle depth');
+INSERT INTO details (term, attribute, value) VALUES ('0000158','scale_unit','mm');
+INSERT INTO details (term, attribute, value) VALUES ('0000158','measurement','Usually ultrasound; at the last ribs.');
+INSERT INTO details (term, attribute, value) VALUES ('0000159','abbreviat','LBCUT');
+INSERT INTO details (term, attribute, value) VALUES ('0000159','trait_name','Loin and belly cut');
+INSERT INTO details (term, attribute, value) VALUES ('0000160','trait_name','skin weight');
+INSERT INTO details (term, attribute, value) VALUES ('0000160','abbreviat','SW');
+INSERT INTO details (term, attribute, value) VALUES ('0000161','trait_name','skin percentage');
+INSERT INTO details (term, attribute, value) VALUES ('0000161','abbreviat','SP');
+INSERT INTO details (term, attribute, value) VALUES ('0000162','trait_name','skin thickness');
+INSERT INTO details (term, attribute, value) VALUES ('0000162','trait_desc','Skin thickness on the back, at the mid-point of body length.');
+INSERT INTO details (term, attribute, value) VALUES ('0000163','trait_name','Trimmed whole-sale product / live weight');
+INSERT INTO details (term, attribute, value) VALUES ('0000163','trait_desc','Trimmed whole-sale product adjusted to a constant live weight');
+INSERT INTO details (term, attribute, value) VALUES ('0000163','custom_name','twplwt');
+INSERT INTO details (term, attribute, value) VALUES ('0000164','trait_name','Trimmed whole-sale product / carcass weight');
+INSERT INTO details (term, attribute, value) VALUES ('0000164','trait_desc','Trimmed whole-sale product adjusted to a constant carcass weight');
+INSERT INTO details (term, attribute, value) VALUES ('0000164','custom_name','twpcwt');
+INSERT INTO details (term, attribute, value) VALUES ('0000165','trait_name','Heart weight');
+INSERT INTO details (term, attribute, value) VALUES ('0000165','abbreviat','HWT');
+INSERT INTO details (term, attribute, value) VALUES ('0000165','scale_unit','kg');
+INSERT INTO details (term, attribute, value) VALUES ('0000166','trait_desc','androstenone level measured at slaughter');
+INSERT INTO details (term, attribute, value) VALUES ('0000166','abbreviat','FANDRO');
+INSERT INTO details (term, attribute, value) VALUES ('0000166','trait_name','fat androstenone level');
+INSERT INTO details (term, attribute, value) VALUES ('0000167','abbreviat','100FANDRO');
+INSERT INTO details (term, attribute, value) VALUES ('0000167','trait_name','fat androstenone level at 100 days of age');
+INSERT INTO details (term, attribute, value) VALUES ('0000168','abbreviat','120FANDRO');
+INSERT INTO details (term, attribute, value) VALUES ('0000168','trait_name','fat androstenone level at 120 days of age');
+INSERT INTO details (term, attribute, value) VALUES ('0000169','abbreviat','140FANDRO');
+INSERT INTO details (term, attribute, value) VALUES ('0000169','trait_name','fat androstenone level at 140 days of age');
+INSERT INTO details (term, attribute, value) VALUES ('0000170','abbreviat','160FANDRO');
+INSERT INTO details (term, attribute, value) VALUES ('0000170','trait_name','fat androstenone level at 160 days of age');
+INSERT INTO details (term, attribute, value) VALUES ('0000171','scale_unit','%');
+INSERT INTO details (term, attribute, value) VALUES ('0000171','abbreviat','FA-C18:2');
+INSERT INTO details (term, attribute, value) VALUES ('0000171','custom_name','Fatty acid composition');
+INSERT INTO details (term, attribute, value) VALUES ('0000171','trait_name','Linoleic acid percentage');
+INSERT INTO details (term, attribute, value) VALUES ('0000171','trait_desc','Measured in backfat');
+INSERT INTO details (term, attribute, value) VALUES ('0000172','scale_unit','%');
+INSERT INTO details (term, attribute, value) VALUES ('0000172','custom_name','Fatty acid composition');
+INSERT INTO details (term, attribute, value) VALUES ('0000172','trait_name','heptadecanoic acid percentage');
+INSERT INTO details (term, attribute, value) VALUES ('0000172','trait_desc','Measured in backfat');
+INSERT INTO details (term, attribute, value) VALUES ('0000173','scale_unit','%');
+INSERT INTO details (term, attribute, value) VALUES ('0000173','abbreviat','FA-C18:3');
+INSERT INTO details (term, attribute, value) VALUES ('0000173','custom_name','Fatty acid composition');
+INSERT INTO details (term, attribute, value) VALUES ('0000173','trait_name','Linolenic acid percentage');
+INSERT INTO details (term, attribute, value) VALUES ('0000173','trait_desc','Measured in backfat');
+INSERT INTO details (term, attribute, value) VALUES ('0000174','scale_unit','%');
+INSERT INTO details (term, attribute, value) VALUES ('0000174','abbreviat','FA-C14:0');
+INSERT INTO details (term, attribute, value) VALUES ('0000174','custom_name','Fatty acid composition');
+INSERT INTO details (term, attribute, value) VALUES ('0000174','trait_desc','Measured in backfat');
+INSERT INTO details (term, attribute, value) VALUES ('0000174','trait_name','Myristic acid percentage');
+INSERT INTO details (term, attribute, value) VALUES ('0000175','scale_unit','%');
+INSERT INTO details (term, attribute, value) VALUES ('0000175','abbreviat','FA-C16:0');
+INSERT INTO details (term, attribute, value) VALUES ('0000175','custom_name','Fatty acid composition');
+INSERT INTO details (term, attribute, value) VALUES ('0000175','trait_desc','Measured in backfat');
+INSERT INTO details (term, attribute, value) VALUES ('0000175','trait_name','Palmitic acid percentage');
+INSERT INTO details (term, attribute, value) VALUES ('0000176','scale_unit','%');
+INSERT INTO details (term, attribute, value) VALUES ('0000176','abbreviat','FA-C16:1');
+INSERT INTO details (term, attribute, value) VALUES ('0000176','custom_name','Fatty acid composition');
+INSERT INTO details (term, attribute, value) VALUES ('0000176','trait_desc','Measured in backfat');
+INSERT INTO details (term, attribute, value) VALUES ('0000176','trait_name','Palmitoleic acid percentage');
+INSERT INTO details (term, attribute, value) VALUES ('0000177','abbreviat','FA-C17:0');
+INSERT INTO details (term, attribute, value) VALUES ('0000177','custom_name','Fatty acid composition');
+INSERT INTO details (term, attribute, value) VALUES ('0000177','trait_name','Heptadecanoic acid percentage');
+INSERT INTO details (term, attribute, value) VALUES ('0000177','trait_desc','Measured in backfat');
+INSERT INTO details (term, attribute, value) VALUES ('0000178','scale_unit','%');
+INSERT INTO details (term, attribute, value) VALUES ('0000178','abbreviat','FA-C18:0');
+INSERT INTO details (term, attribute, value) VALUES ('0000178','custom_name','Fatty acid composition');
+INSERT INTO details (term, attribute, value) VALUES ('0000178','trait_desc','Measured in backfat');
+INSERT INTO details (term, attribute, value) VALUES ('0000178','trait_name','Stearic acid percentage');
+INSERT INTO details (term, attribute, value) VALUES ('0000179','scale_unit','%');
+INSERT INTO details (term, attribute, value) VALUES ('0000179','abbreviat','FA-C18:1n-9');
+INSERT INTO details (term, attribute, value) VALUES ('0000179','custom_name','Fatty acid composition');
+INSERT INTO details (term, attribute, value) VALUES ('0000179','trait_desc','Measured in backfat');
+INSERT INTO details (term, attribute, value) VALUES ('0000179','trait_name','Oleic acid percentage');
+INSERT INTO details (term, attribute, value) VALUES ('0000180','scale_unit','%');
+INSERT INTO details (term, attribute, value) VALUES ('0000180','trait_name','7-Octadecenoic acid percentage');
+INSERT INTO details (term, attribute, value) VALUES ('0000180','abbreviat','FA-C18:1n-7');
+INSERT INTO details (term, attribute, value) VALUES ('0000180','custom_name','Fatty acid composition');
+INSERT INTO details (term, attribute, value) VALUES ('0000180','trait_desc','Measured in backfat');
+INSERT INTO details (term, attribute, value) VALUES ('0000181','scale_unit','%');
+INSERT INTO details (term, attribute, value) VALUES ('0000181','trait_name','Eicosenoic acid percentage');
+INSERT INTO details (term, attribute, value) VALUES ('0000181','abbreviat','FA-C20:1');
+INSERT INTO details (term, attribute, value) VALUES ('0000181','custom_name','Fatty acid composition');
+INSERT INTO details (term, attribute, value) VALUES ('0000181','trait_desc','Measured in backfat');
+INSERT INTO details (term, attribute, value) VALUES ('0000182','scale_unit','%');
+INSERT INTO details (term, attribute, value) VALUES ('0000182','trait_name','Eicosadienoic acid percentage');
+INSERT INTO details (term, attribute, value) VALUES ('0000182','abbreviat','FA-C20:2');
+INSERT INTO details (term, attribute, value) VALUES ('0000182','custom_name','Fatty acid composition');
+INSERT INTO details (term, attribute, value) VALUES ('0000182','trait_desc','Measured in backfat');
+INSERT INTO details (term, attribute, value) VALUES ('0000183','trait_name','Average chain length');
+INSERT INTO details (term, attribute, value) VALUES ('0000183','abbreviat','FA-ACL');
+INSERT INTO details (term, attribute, value) VALUES ('0000184','trait_name','Double-bond index');
+INSERT INTO details (term, attribute, value) VALUES ('0000184','abbreviat','FA-DBI');
+INSERT INTO details (term, attribute, value) VALUES ('0000185','abbreviat','FA-UI');
+INSERT INTO details (term, attribute, value) VALUES ('0000185','trait_name','Unsaturated index');
+INSERT INTO details (term, attribute, value) VALUES ('0000186','abbreviat','FA-PI');
+INSERT INTO details (term, attribute, value) VALUES ('0000186','trait_name','Peroxidability index');
+INSERT INTO details (term, attribute, value) VALUES ('0000187','trait_name','Salmonella count in feces day 1 post infection');
+INSERT INTO details (term, attribute, value) VALUES ('0000188','trait_name','Salmonella count in feces day 7 post infection');
+INSERT INTO details (term, attribute, value) VALUES ('0000189','custom_name','''');
+INSERT INTO details (term, attribute, value) VALUES ('0000189','trait_desc','''');
+INSERT INTO details (term, attribute, value) VALUES ('0000189','measurement','''');
+INSERT INTO details (term, attribute, value) VALUES ('0000189','scale_unit','''');
+INSERT INTO details (term, attribute, value) VALUES ('0000189','trait_name','Salmonella count in liver');
+INSERT INTO details (term, attribute, value) VALUES ('0000189','abbreviat','SCL');
+INSERT INTO details (term, attribute, value) VALUES ('0000190','trait_name','Salmonella count in spleen');
+INSERT INTO details (term, attribute, value) VALUES ('0000191','trait_desc','Count of white blood cells');
+INSERT INTO details (term, attribute, value) VALUES ('0000191','scale_unit','cpm');
+INSERT INTO details (term, attribute, value) VALUES ('0000191','trait_name','number of leucocytes');
+INSERT INTO details (term, attribute, value) VALUES ('0000191','abbreviat','WBC');
+INSERT INTO details (term, attribute, value) VALUES ('0000191','custom_name','White blood cells');
+INSERT INTO details (term, attribute, value) VALUES ('0000191','measurement','With cello-scope');
+INSERT INTO details (term, attribute, value) VALUES ('0000192','scale_unit','cpm');
+INSERT INTO details (term, attribute, value) VALUES ('0000192','trait_name','mitogen-induced proliferation');
+INSERT INTO details (term, attribute, value) VALUES ('0000193','scale_unit','cpm');
+INSERT INTO details (term, attribute, value) VALUES ('0000193','abbreviat','PWM');
+INSERT INTO details (term, attribute, value) VALUES ('0000193','trait_name','PWM-induced proliferation');
+INSERT INTO details (term, attribute, value) VALUES ('0000194','abbreviat','conA');
+INSERT INTO details (term, attribute, value) VALUES ('0000194','trait_name','conA-induced proliferation');
+INSERT INTO details (term, attribute, value) VALUES ('0000194','scale_unit','cpm');
+INSERT INTO details (term, attribute, value) VALUES ('0000195','scale_unit','cpm');
+INSERT INTO details (term, attribute, value) VALUES ('0000195','abbreviat','spont');
+INSERT INTO details (term, attribute, value) VALUES ('0000195','trait_name','spontenous proliferation');
+INSERT INTO details (term, attribute, value) VALUES ('0000196','trait_name','pre/post-vaccination levels of IgG to K88 antigen');
+INSERT INTO details (term, attribute, value) VALUES ('0000197','trait_name','specific IgG response to E. coli O149 antigen');
+INSERT INTO details (term, attribute, value) VALUES ('0000198','trait_name','post-stress mitogen induced IL-2 activity');
+INSERT INTO details (term, attribute, value) VALUES ('0000199','trait_name','stress induced neutrophils numbers alteration');
+INSERT INTO details (term, attribute, value) VALUES ('0000200','trait_name','stress induced leukocyte proliferation.');
+INSERT INTO details (term, attribute, value) VALUES ('0000201','abbreviat','K88R');
+INSERT INTO details (term, attribute, value) VALUES ('0000201','trait_name','resistance to E.coli K88 infection');
+INSERT INTO details (term, attribute, value) VALUES ('0000202','trait_name','Anti-K88 E.coli IgG levels');
+INSERT INTO details (term, attribute, value) VALUES ('0000202','abbreviat','K88Ab');
+INSERT INTO details (term, attribute, value) VALUES ('0000202','trait_desc','Natural IgG Ab levels against K88 E.coli');
+INSERT INTO details (term, attribute, value) VALUES ('0000203','abbreviat','0149Ab');
+INSERT INTO details (term, attribute, value) VALUES ('0000203','trait_name','Anti-O149 E.coli IgG levels');
+INSERT INTO details (term, attribute, value) VALUES ('0000203','trait_desc','Natural IgG Ab levels against O149 E.coli');
+INSERT INTO details (term, attribute, value) VALUES ('0000204','abbreviat','0149AbR');
+INSERT INTO details (term, attribute, value) VALUES ('0000204','trait_name','Anti-O149 E.coli IgG level response');
+INSERT INTO details (term, attribute, value) VALUES ('0000204','trait_desc','IgG response to O149 E.coli');
+INSERT INTO details (term, attribute, value) VALUES ('0000205','abbreviat','ECF18R');
+INSERT INTO details (term, attribute, value) VALUES ('0000205','trait_name','Small intestinal Escherichia coli F18 receptor');
+INSERT INTO details (term, attribute, value) VALUES ('0000206','trait_name','resistance to psuedorabies virus infection');
+INSERT INTO details (term, attribute, value) VALUES ('0000207','trait_name','ACTH basal level');
+INSERT INTO details (term, attribute, value) VALUES ('0000207','abbreviat','ACTH1');
+INSERT INTO details (term, attribute, value) VALUES ('0000207','trait_desc','Basal Adrenocorticotropic Hormone (ACTH) levels');
+INSERT INTO details (term, attribute, value) VALUES ('0000207','measurement','from EDTH treated blood');
+INSERT INTO details (term, attribute, value) VALUES ('0000207','scale_unit','pg/ml');
+INSERT INTO details (term, attribute, value) VALUES ('0000208','trait_name','ACTH response to stress');
+INSERT INTO details (term, attribute, value) VALUES ('0000208','abbreviat','ACTH2');
+INSERT INTO details (term, attribute, value) VALUES ('0000208','measurement','from EDTH treated blood');
+INSERT INTO details (term, attribute, value) VALUES ('0000208','scale_unit','pg/ml');
+INSERT INTO details (term, attribute, value) VALUES ('0000208','trait_desc','Post stress Adrenocorticotropic Hormone (ACTH) levels');
+INSERT INTO details (term, attribute, value) VALUES ('0000209','trait_name','ACTH response to stress');
+INSERT INTO details (term, attribute, value) VALUES ('0000209','trait_desc','Adrenocorticotropic Hormone (ACTH) variations');
+INSERT INTO details (term, attribute, value) VALUES ('0000209','abbreviat','dACTH');
+INSERT INTO details (term, attribute, value) VALUES ('0000209','measurement','from EDTH treated blood');
+INSERT INTO details (term, attribute, value) VALUES ('0000209','scale_unit','pg/ml');
+INSERT INTO details (term, attribute, value) VALUES ('0000210','trait_name','Basal cortisol levels');
+INSERT INTO details (term, attribute, value) VALUES ('0000210','trait_desc','Basal cortisol levels');
+INSERT INTO details (term, attribute, value) VALUES ('0000210','abbreviat','CORT1');
+INSERT INTO details (term, attribute, value) VALUES ('0000210','measurement','from EDTH treated blood');
+INSERT INTO details (term, attribute, value) VALUES ('0000210','scale_unit','pg/ml');
+INSERT INTO details (term, attribute, value) VALUES ('0000211','abbreviat','CORT2');
+INSERT INTO details (term, attribute, value) VALUES ('0000211','measurement','from EDTH treated blood');
+INSERT INTO details (term, attribute, value) VALUES ('0000211','scale_unit','pg/ml');
+INSERT INTO details (term, attribute, value) VALUES ('0000211','trait_desc','Post stress cortisol levels');
+INSERT INTO details (term, attribute, value) VALUES ('0000211','trait_name','post-stress cortisol levels');
+INSERT INTO details (term, attribute, value) VALUES ('0000212','trait_desc','Cortisol level variations');
+INSERT INTO details (term, attribute, value) VALUES ('0000212','abbreviat','dCORT');
+INSERT INTO details (term, attribute, value) VALUES ('0000212','measurement','from EDTH treated blood');
+INSERT INTO details (term, attribute, value) VALUES ('0000212','scale_unit','g/ml');
+INSERT INTO details (term, attribute, value) VALUES ('0000212','trait_name','post-stress cortisol levels');
+INSERT INTO details (term, attribute, value) VALUES ('0000213','trait_name','Basal glucose levels');
+INSERT INTO details (term, attribute, value) VALUES ('0000213','measurement','from EDTH treated blood');
+INSERT INTO details (term, attribute, value) VALUES ('0000213','scale_unit','g/ml');
+INSERT INTO details (term, attribute, value) VALUES ('0000213','abbreviat','GLU1');
+INSERT INTO details (term, attribute, value) VALUES ('0000213','custom_name','Glycemia');
+INSERT INTO details (term, attribute, value) VALUES ('0000214','measurement','from EDTH treated blood');
+INSERT INTO details (term, attribute, value) VALUES ('0000214','scale_unit','g/ml');
+INSERT INTO details (term, attribute, value) VALUES ('0000214','abbreviat','GLU2');
+INSERT INTO details (term, attribute, value) VALUES ('0000214','trait_name','Glucose level response to stress');
+INSERT INTO details (term, attribute, value) VALUES ('0000214','custom_name','Glycemia');
+INSERT INTO details (term, attribute, value) VALUES ('0000215','abbreviat','dGLU');
+INSERT INTO details (term, attribute, value) VALUES ('0000215','measurement','from EDTH treated blood');
+INSERT INTO details (term, attribute, value) VALUES ('0000215','scale_unit','g/ml');
+INSERT INTO details (term, attribute, value) VALUES ('0000215','trait_name','Glucose level variations');
+INSERT INTO details (term, attribute, value) VALUES ('0000215','custom_name','Glycemia');
+INSERT INTO details (term, attribute, value) VALUES ('0000216','abbreviat','LOC');
+INSERT INTO details (term, attribute, value) VALUES ('0000216','trait_name','Locomotion');
+INSERT INTO details (term, attribute, value) VALUES ('0000216','trait_desc','Number of test areana sections entered during stress.');
+INSERT INTO details (term, attribute, value) VALUES ('0000217','abbreviat','EXPL');
+INSERT INTO details (term, attribute, value) VALUES ('0000217','trait_name','Exploration');
+INSERT INTO details (term, attribute, value) VALUES ('0000217','trait_desc','Time spent rooting, sniffing the floor or the sides of the test arena during test period.');
+INSERT INTO details (term, attribute, value) VALUES ('0000218','trait_name','neuroendocrine responses');
+INSERT INTO details (term, attribute, value) VALUES ('0000219','trait_name','black vs white color');
+INSERT INTO details (term, attribute, value) VALUES ('0000219','abbreviat','CC');
+INSERT INTO details (term, attribute, value) VALUES ('0000220','abbreviat','CC');
+INSERT INTO details (term, attribute, value) VALUES ('0000220','trait_name','spots');
+INSERT INTO details (term, attribute, value) VALUES ('0000221','trait_name','body length');
+INSERT INTO details (term, attribute, value) VALUES ('0000222','trait_name','thoracic vertebra number');
+INSERT INTO details (term, attribute, value) VALUES ('0000222','abbreviat','tvnum');
+INSERT INTO details (term, attribute, value) VALUES ('0000223','trait_desc','sum of thoracic and lumbar vertebra numbers.');
+INSERT INTO details (term, attribute, value) VALUES ('0000223','trait_name','total vertebra number');
+INSERT INTO details (term, attribute, value) VALUES ('0000223','abbreviat','vnum');
+INSERT INTO details (term, attribute, value) VALUES ('0000224','scale_unit','cm');
+INSERT INTO details (term, attribute, value) VALUES ('0000224','custom_name','Distance between spine bones.');
+INSERT INTO details (term, attribute, value) VALUES ('0000224','abbreviat','vdist');
+INSERT INTO details (term, attribute, value) VALUES ('0000224','trait_name','vertebra distance');
+INSERT INTO details (term, attribute, value) VALUES ('0000225','trait_name','claws length front inside');
+INSERT INTO details (term, attribute, value) VALUES ('0000226','trait_name','claws length front outside');
+INSERT INTO details (term, attribute, value) VALUES ('0000227','trait_name','claws length hind inside');
+INSERT INTO details (term, attribute, value) VALUES ('0000228','trait_name','claws length hind outside');
+INSERT INTO details (term, attribute, value) VALUES ('0000229','trait_name','feet and legs score');
+INSERT INTO details (term, attribute, value) VALUES ('0000229','measurement','Objective scores.');
+INSERT INTO details (term, attribute, value) VALUES ('0000230','trait_name','feet score front');
+INSERT INTO details (term, attribute, value) VALUES ('0000231','trait_name','feet score rear');
+INSERT INTO details (term, attribute, value) VALUES ('0000232','trait_name','hair (amount)');
+INSERT INTO details (term, attribute, value) VALUES ('0000233','trait_name','height');
+INSERT INTO details (term, attribute, value) VALUES ('0000234','trait_name','joint abnormalities');
+INSERT INTO details (term, attribute, value) VALUES ('0000235','trait_name','joint leasions');
+INSERT INTO details (term, attribute, value) VALUES ('0000236','trait_name','leg length');
+INSERT INTO details (term, attribute, value) VALUES ('0000237','trait_name','leg pastern front');
+INSERT INTO details (term, attribute, value) VALUES ('0000238','trait_name','leg pastern hind');
+INSERT INTO details (term, attribute, value) VALUES ('0000239','trait_name','leg score front');
+INSERT INTO details (term, attribute, value) VALUES ('0000240','trait_name','leg score hind');
+INSERT INTO details (term, attribute, value) VALUES ('0000241','trait_name','leg set view');
+INSERT INTO details (term, attribute, value) VALUES ('0000242','trait_name','leg torsion front');
+INSERT INTO details (term, attribute, value) VALUES ('0000243','trait_name','leg torsion hind');
+INSERT INTO details (term, attribute, value) VALUES ('0000244','trait_name','legs angularity front');
+INSERT INTO details (term, attribute, value) VALUES ('0000245','trait_name','legs angularity hind');
+INSERT INTO details (term, attribute, value) VALUES ('0000246','abbreviat','ccannon');
+INSERT INTO details (term, attribute, value) VALUES ('0000246','trait_name','Circumference of cannon bone');
+INSERT INTO details (term, attribute, value) VALUES ('0000247','trait_name','femur dimensions');
+INSERT INTO details (term, attribute, value) VALUES ('0000248','trait_name','osteochondrosis');
+INSERT INTO details (term, attribute, value) VALUES ('0000249','trait_name','lob ear');
+INSERT INTO details (term, attribute, value) VALUES ('0000250','trait_name','nose score');
+INSERT INTO details (term, attribute, value) VALUES ('0000250','measurement','Objective scores.');
+INSERT INTO details (term, attribute, value) VALUES ('0000251','trait_name','swelling of joints');
+INSERT INTO details (term, attribute, value) VALUES ('0000252','trait_name','longevity (sow)');
+INSERT INTO details (term, attribute, value) VALUES ('0000253','trait_name','scrotal hernia');
+INSERT INTO details (term, attribute, value) VALUES ('0000254','trait_name','rhinitis');
+INSERT INTO details (term, attribute, value) VALUES ('0000255','trait_name','feed intake 35 to 55 kg');
+INSERT INTO details (term, attribute, value) VALUES ('0000255','scale_unit','kg/day');
+INSERT INTO details (term, attribute, value) VALUES ('0000256','trait_name','feed intake 55 to 80 kg');
+INSERT INTO details (term, attribute, value) VALUES ('0000256','scale_unit','kg/day');
+INSERT INTO details (term, attribute, value) VALUES ('0000257','scale_unit','cm');
+INSERT INTO details (term, attribute, value) VALUES ('0000257','trait_name','length of small intestine');
+INSERT INTO details (term, attribute, value) VALUES ('0000257','abbreviat','LSI');
+INSERT INTO details (term, attribute, value) VALUES ('0000258','abbreviat','ADG');
+INSERT INTO details (term, attribute, value) VALUES ('0000258','trait_name','average daily gain');
+INSERT INTO details (term, attribute, value) VALUES ('0000258','scale_unit','kg/day');
+INSERT INTO details (term, attribute, value) VALUES ('0000259','abbreviat','ADG');
+INSERT INTO details (term, attribute, value) VALUES ('0000259','trait_desc','ADG during grower" period."');
+INSERT INTO details (term, attribute, value) VALUES ('0000259','trait_name','average daily gain 35 to 55 kg');
+INSERT INTO details (term, attribute, value) VALUES ('0000259','scale_unit','kg/day');
+INSERT INTO details (term, attribute, value) VALUES ('0000260','abbreviat','ADG');
+INSERT INTO details (term, attribute, value) VALUES ('0000260','trait_desc','ADG during finishing" period."');
+INSERT INTO details (term, attribute, value) VALUES ('0000260','trait_name','average daily gain 55 to 80 kg');
+INSERT INTO details (term, attribute, value) VALUES ('0000260','scale_unit','kg/day');
+INSERT INTO details (term, attribute, value) VALUES ('0000261','abbreviat','ADG');
+INSERT INTO details (term, attribute, value) VALUES ('0000261','trait_name','average daily gain weaning to 25 kg');
+INSERT INTO details (term, attribute, value) VALUES ('0000261','trait_desc','Early ADG from weaning (5.5kg) to 25 kg (nursery).');
+INSERT INTO details (term, attribute, value) VALUES ('0000261','custom_name','EGR');
+INSERT INTO details (term, attribute, value) VALUES ('0000261','scale_unit','g/day');
+INSERT INTO details (term, attribute, value) VALUES ('0000262','abbreviat','ADG');
+INSERT INTO details (term, attribute, value) VALUES ('0000262','trait_desc','ADG during nursery and growing period (between weaning and slaughter).');
+INSERT INTO details (term, attribute, value) VALUES ('0000262','trait_name','average daily gain weaning to 55 kg');
+INSERT INTO details (term, attribute, value) VALUES ('0000263','abbreviat','ADG');
+INSERT INTO details (term, attribute, value) VALUES ('0000263','trait_name','average daily gain 25 to 90 kg');
+INSERT INTO details (term, attribute, value) VALUES ('0000263','scale_unit','g/day');
+INSERT INTO details (term, attribute, value) VALUES ('0000263','trait_desc','Test ADG from 25 kg to 90 kg.');
+INSERT INTO details (term, attribute, value) VALUES ('0000263','custom_name','TGR');
+INSERT INTO details (term, attribute, value) VALUES ('0000264','abbreviat','ADG');
+INSERT INTO details (term, attribute, value) VALUES ('0000264','trait_name','average daily gain during the entire life.');
+INSERT INTO details (term, attribute, value) VALUES ('0000264','scale_unit','g/day');
+INSERT INTO details (term, attribute, value) VALUES ('0000264','custom_name','LGR');
+INSERT INTO details (term, attribute, value) VALUES ('0000264','trait_desc','Life time growth ADG.');
+INSERT INTO details (term, attribute, value) VALUES ('0000265','abbreviat','ADG');
+INSERT INTO details (term, attribute, value) VALUES ('0000265','trait_desc','ADG during Birth to finishing (55 kg)');
+INSERT INTO details (term, attribute, value) VALUES ('0000265','trait_name','average daily gain birth to end of test');
+INSERT INTO details (term, attribute, value) VALUES ('0000265','scale_unit','kg/day');
+INSERT INTO details (term, attribute, value) VALUES ('0000266','abbreviat','ADG');
+INSERT INTO details (term, attribute, value) VALUES ('0000266','trait_name','average daily gain birth to 30 kg');
+INSERT INTO details (term, attribute, value) VALUES ('0000267','abbreviat','ADG');
+INSERT INTO details (term, attribute, value) VALUES ('0000267','trait_name','average daily gain birth to 70 kg');
+INSERT INTO details (term, attribute, value) VALUES ('0000268','abbreviat','ADG');
+INSERT INTO details (term, attribute, value) VALUES ('0000268','trait_desc','average daily gain birth to weaning (5.5kg)');
+INSERT INTO details (term, attribute, value) VALUES ('0000268','trait_name','average daily gain on weaning');
+INSERT INTO details (term, attribute, value) VALUES ('0000268','scale_unit','kg/day');
+INSERT INTO details (term, attribute, value) VALUES ('0000269','abbreviat','ADG');
+INSERT INTO details (term, attribute, value) VALUES ('0000269','trait_desc','average daily gain during the test period"."');
+INSERT INTO details (term, attribute, value) VALUES ('0000269','trait_name','average daily gain on test');
+INSERT INTO details (term, attribute, value) VALUES ('0000269','scale_unit','kg/day');
+INSERT INTO details (term, attribute, value) VALUES ('0000270','abbreviat','ADG');
+INSERT INTO details (term, attribute, value) VALUES ('0000270','trait_desc','ADG during birth to weaning');
+INSERT INTO details (term, attribute, value) VALUES ('0000270','trait_name','average daily gain (birth to 3 weeks)');
+INSERT INTO details (term, attribute, value) VALUES ('0000271','abbreviat','ADG');
+INSERT INTO details (term, attribute, value) VALUES ('0000271','trait_name','average daily gain (3 to 5 weeks)');
+INSERT INTO details (term, attribute, value) VALUES ('0000272','abbreviat','ADG');
+INSERT INTO details (term, attribute, value) VALUES ('0000272','trait_name','average daily gain (5 to 7 weeks)');
+INSERT INTO details (term, attribute, value) VALUES ('0000273','abbreviat','ADG');
+INSERT INTO details (term, attribute, value) VALUES ('0000273','trait_name','average daily gain (7 to 9 weeks)');
+INSERT INTO details (term, attribute, value) VALUES ('0000274','abbreviat','ADG');
+INSERT INTO details (term, attribute, value) VALUES ('0000274','trait_desc','ADG during Nursery period');
+INSERT INTO details (term, attribute, value) VALUES ('0000274','trait_name','average daily gain (3-10 weeks)');
+INSERT INTO details (term, attribute, value) VALUES ('0000275','abbreviat','ADG');
+INSERT INTO details (term, attribute, value) VALUES ('0000275','trait_desc','ADG during Growing period');
+INSERT INTO details (term, attribute, value) VALUES ('0000275','trait_name','average daily gain (4-13 weeks)');
+INSERT INTO details (term, attribute, value) VALUES ('0000276','abbreviat','ADG');
+INSERT INTO details (term, attribute, value) VALUES ('0000276','trait_desc','ADG during Finishing period');
+INSERT INTO details (term, attribute, value) VALUES ('0000276','trait_name','average daily gain (10-22 weeks)');
+INSERT INTO details (term, attribute, value) VALUES ('0000276','custom_name','fattening ADG');
+INSERT INTO details (term, attribute, value) VALUES ('0000277','abbreviat','ADG; EDG');
+INSERT INTO details (term, attribute, value) VALUES ('0000277','trait_name','average daily gain (8-18 weeks)');
+INSERT INTO details (term, attribute, value) VALUES ('0000278','abbreviat','ADG; LDG');
+INSERT INTO details (term, attribute, value) VALUES ('0000278','trait_name','average daily gain (18-26 weeks)');
+INSERT INTO details (term, attribute, value) VALUES ('0000279','abbreviat','ADG');
+INSERT INTO details (term, attribute, value) VALUES ('0000279','trait_name','average daily gain (birth-60 days)');
+INSERT INTO details (term, attribute, value) VALUES ('0000280','abbreviat','ADG');
+INSERT INTO details (term, attribute, value) VALUES ('0000280','trait_name','average daily gain (60-160 days)');
+INSERT INTO details (term, attribute, value) VALUES ('0000281','custom_name','Birth weight');
+INSERT INTO details (term, attribute, value) VALUES ('0000281','trait_name','body weight at birth');
+INSERT INTO details (term, attribute, value) VALUES ('0000281','abbreviat','BWt');
+INSERT INTO details (term, attribute, value) VALUES ('0000281','trait_desc','Measured live');
+INSERT INTO details (term, attribute, value) VALUES ('0000282','trait_name','body weight at slaughter');
+INSERT INTO details (term, attribute, value) VALUES ('0000282','abbreviat','endWT');
+INSERT INTO details (term, attribute, value) VALUES ('0000282','trait_desc','Measured live');
+INSERT INTO details (term, attribute, value) VALUES ('0000283','trait_name','Age at slaughter');
+INSERT INTO details (term, attribute, value) VALUES ('0000283','abbreviat','endage');
+INSERT INTO details (term, attribute, value) VALUES ('0000284','abbreviat','16dWt');
+INSERT INTO details (term, attribute, value) VALUES ('0000284','trait_name','body weight at 16 days');
+INSERT INTO details (term, attribute, value) VALUES ('0000284','trait_desc','Measured live');
+INSERT INTO details (term, attribute, value) VALUES ('0000285','abbreviat','21dWt');
+INSERT INTO details (term, attribute, value) VALUES ('0000285','trait_name','body weight at 3 weeks of age');
+INSERT INTO details (term, attribute, value) VALUES ('0000285','trait_desc','Measured live');
+INSERT INTO details (term, attribute, value) VALUES ('0000286','trait_name','body weight at weaning');
+INSERT INTO details (term, attribute, value) VALUES ('0000286','trait_desc','pigs are normally weaned at 42 days of age.');
+INSERT INTO details (term, attribute, value) VALUES ('0000286','custom_name','weaning weight');
+INSERT INTO details (term, attribute, value) VALUES ('0000286','abbreviat','WWT');
+INSERT INTO details (term, attribute, value) VALUES ('0000287','trait_name','body weight at 4 weeks of age');
+INSERT INTO details (term, attribute, value) VALUES ('0000287','abbreviat','Wt');
+INSERT INTO details (term, attribute, value) VALUES ('0000288','trait_name','body weight at 8 weeks of age');
+INSERT INTO details (term, attribute, value) VALUES ('0000288','abbreviat','Wt');
+INSERT INTO details (term, attribute, value) VALUES ('0000289','trait_name','body weight at 10 weeks of age');
+INSERT INTO details (term, attribute, value) VALUES ('0000289','trait_desc','Measured live');
+INSERT INTO details (term, attribute, value) VALUES ('0000289','abbreviat','Wt');
+INSERT INTO details (term, attribute, value) VALUES ('0000290','trait_name','body weight at 13 weeks of age');
+INSERT INTO details (term, attribute, value) VALUES ('0000290','trait_desc','Measured live');
+INSERT INTO details (term, attribute, value) VALUES ('0000290','abbreviat','Wt');
+INSERT INTO details (term, attribute, value) VALUES ('0000291','trait_name','body weight at 17 weeks of age');
+INSERT INTO details (term, attribute, value) VALUES ('0000291','trait_desc','Measured live');
+INSERT INTO details (term, attribute, value) VALUES ('0000291','abbreviat','Wt');
+INSERT INTO details (term, attribute, value) VALUES ('0000292','trait_name','body weight at 22 weeks of age');
+INSERT INTO details (term, attribute, value) VALUES ('0000292','trait_desc','Measured live');
+INSERT INTO details (term, attribute, value) VALUES ('0000292','abbreviat','Wt');
+INSERT INTO details (term, attribute, value) VALUES ('0000293','trait_name','body weight at 25 weeks of age');
+INSERT INTO details (term, attribute, value) VALUES ('0000293','custom_name','Live weight');
+INSERT INTO details (term, attribute, value) VALUES ('0000293','trait_desc','Measured live');
+INSERT INTO details (term, attribute, value) VALUES ('0000293','abbreviat','Wt');
+INSERT INTO details (term, attribute, value) VALUES ('0000294','trait_name','body weight at 26 weeks of age');
+INSERT INTO details (term, attribute, value) VALUES ('0000294','custom_name','Finishing weight');
+INSERT INTO details (term, attribute, value) VALUES ('0000294','trait_desc','Measured live');
+INSERT INTO details (term, attribute, value) VALUES ('0000294','abbreviat','Wt');
+INSERT INTO details (term, attribute, value) VALUES ('0000295','trait_name','body weight at 60 days of age');
+INSERT INTO details (term, attribute, value) VALUES ('0000295','abbreviat','Wt');
+INSERT INTO details (term, attribute, value) VALUES ('0000296','trait_name','feed conversion ratio');
+INSERT INTO details (term, attribute, value) VALUES ('0000297','trait_name','feed conversion ratio 35 to 55 kg');
+INSERT INTO details (term, attribute, value) VALUES ('0000298','trait_name','feed conversion ratio 55 to 80 kg');
+INSERT INTO details (term, attribute, value) VALUES ('0000299','custom_name','Litter size');
+INSERT INTO details (term, attribute, value) VALUES ('0000299','abbreviat','LS');
+INSERT INTO details (term, attribute, value) VALUES ('0000299','trait_name','total number born');
+INSERT INTO details (term, attribute, value) VALUES ('0000300','abbreviat','NBL');
+INSERT INTO details (term, attribute, value) VALUES ('0000300','custom_name','prenatal survival');
+INSERT INTO details (term, attribute, value) VALUES ('0000300','trait_name','total number born alive');
+INSERT INTO details (term, attribute, value) VALUES ('0000301','trait_name','fully formed pigs');
+INSERT INTO details (term, attribute, value) VALUES ('0000301','abbreviat','NFF');
+INSERT INTO details (term, attribute, value) VALUES ('0000316','abbreviat','FSH');
+INSERT INTO details (term, attribute, value) VALUES ('0000316','trait_name','Plasma FSH concentration');
+
+
+-- update term id with term oid
+UPDATE details SET term = term.oid FROM term WHERE details.term = term.id;
+
+

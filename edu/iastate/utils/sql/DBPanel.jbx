@@ -1,0 +1,23 @@
+[PropertyInfo]
+CacheDB,com.borland.dx.sql.dataset.Database,false,false, , ,false,<default>
+connectionURL,String,false,false, , ,false,<default>
+DB,java.sql.Connection,false,false, , ,true,<default>
+dbDisposeMonitor,com.borland.dbswing.DBDisposeMonitor,false,false, , ,false,<default>
+driver,String,false,false, , ,false,<default>
+editable,boolean,false,false, , ,true,<default>
+JStatusLabel,com.borland.dbswing.JdbStatusLabel,false,false, , ,false,<default>
+JToolBar,com.borland.dbswing.JdbNavToolBar,false,false, , ,false,<default>
+navigateBar,boolean,false,false, , ,false,<default>
+password,String,false,false, , ,false,<default>
+promptPassword,boolean,false,false, , ,false,<default>
+query,com.borland.dx.sql.dataset.QueryDataSet,false,false, , ,false,<default>
+SQL,String,false,false, , ,true,<default>
+sql,String,false,false, , ,false,<default>
+Table,com.borland.dbswing.JdbTable,false,false, , ,false,<default>
+tableScrollPane1,com.borland.dbswing.TableScrollPane,false,false, , ,false,<default>
+userName,String,false,false, , ,false,<default>
+[IconNames]
+
+
+
+

@@ -1,0 +1,36 @@
+2005-05-18(Thu):
+* Meet with Peter Wong and Dr. Honavar. Decide to improve the existing ATO Editor, a.k.a INDUS DAG Editor
+
+2005-05-23(Tue):
+* INDUS Group meeting. Our aim on the next version of the Editor will be 
+  ** Fix known bugs
+  ** Provide developping documents and user manuals
+  ** Provide inference support
+  ** Support for ontology mapping editting
+
+2005-05-24(Wed):
+* Meet with Jim, LaRon and Zhiliang (tele). One group in Roslin, UK trys to build animal trait ontology
+  on chiken with our tools.
+* Swtich from JBuilder to Eclipse
+* Zhiliang has setup a mailling list: atoteam@animalgenome.org
+* Zhiliang's page for the project http://www.animalgenome.org/bioinfo/projects/ATO/
+  
+2005-05-25(Thu):
+* Meet with Zhiliang (tele), Peter. Ask Zhiliang if he has any desired features in the next version   
+
+
+2005-05-26(Fri):
+* Apply for a SourceForge project, named "COB"
+  [https://sourceforge.net/projects/cob/]
+* Peter helps to create a CVS   
+* Extract relevant code from the INDUS project, upload it to the CS department CVS server
+
+2006-05-29(Mon):
+* BIDM paper camera ready version
+* Meet with Peter. He begins to play with the Editor and write some documents. 
+* We plan to finish documentation till Jun 15th.
+
+2006-05-30(Tue):
+* The SF project begins working. 
+* Upload a screen shot for the 2.0 version
+  
