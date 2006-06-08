@@ -33,4 +33,10 @@
 2006-05-30(Tue):
 * The SF project begins working. 
 * Upload a screen shot for the 2.0 version
+
+2006-06-?:
+* Meet with LaRon, discuss the ER diagram of the database
+
+2006-06-08(Thu):
+* Meet with Laron
   
