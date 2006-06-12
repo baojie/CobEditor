@@ -82,6 +82,7 @@ public class PackageView extends TypedTreePanel
         {
             expandPackage((PackageNode)selected) ;
             treeOntology.getModel().reload(selected) ;
+            System.out.println(treeOntology.toString());
         }
         else if(selected instanceof MetaTreeNode) // obsolete node, 2005-08-30
         {
