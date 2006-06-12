@@ -82,6 +82,8 @@ public class PackageView extends TypedTreePanel
         {
             expandPackage((PackageNode)selected) ;
             treeOntology.getModel().reload(selected) ;
+            
+            // 2006-06-12 generate a text version of the DAG
             System.out.println(treeOntology.toString());
         }
         else if(selected instanceof MetaTreeNode) // obsolete node, 2005-08-30

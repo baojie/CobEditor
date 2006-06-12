@@ -34,9 +34,17 @@
 * The SF project begins working. 
 * Upload a screen shot for the 2.0 version
 
-2006-06-?:
+2006-06-05(Mon) :
 * Meet with LaRon, discuss the ER diagram of the database
+
+2006-06-06(Thu):
+* Meet with Peter; INDUS meeting
 
 2006-06-08(Thu):
 * Meet with Laron
-  
+
+2006-06-12(Mon):
+* Meet with Laron, on how to generate text-based tree from the database
+  demostrtated in PackageView.onExpand() 
+* Fix a bug in JDBCUtils.replaceDangerousChar()
+   

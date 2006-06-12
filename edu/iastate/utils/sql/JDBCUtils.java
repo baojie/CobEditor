@@ -280,7 +280,7 @@ public class JDBCUtils
         String values = str ;
         //values = values.replaceAll("\\(", "[") ;
         //values = values.replaceAll("\\)", "]") ;
-        values = values.replaceAll("\\", "\\\\") ;
+        //values = values.replaceAll("\\", "\\\\") ;
         values = values.replaceAll("'", "\\\\'") ;
         return values ;
     }
