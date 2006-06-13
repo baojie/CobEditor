@@ -198,11 +198,10 @@ public class MOEditor extends MOEditorGui implements MessageHandler
 
         String infoAbout = "<html>" +
             "<font color=\"#FF0099\"><b>" +
-            AtoConstent.APP_NAME + "</b></font><br>Version " + 2.0 +
-            "<br>" + "<br><b>Jie Bao</b><br>July 2005<br>" +
-            "Iowa State University<br><a href=\"mailto:baojie@iastate.edu\">" +
-            "baojie@iastate.edu</a><br><a href=\"http://www.cs.iastate.edu/~baojie\">" +
-            "http://www.cs.iastate.edu/~baojie</a><br>" +
+            AtoConstent.APP_NAME + "</b></font><br>Version " + 2.1 +
+            "<br>" + "<br><b>Jie Bao, Peter Wong, LaRon Hughes </b><br>2005-2006<br>" +
+            "Iowa State University<br><a href=\"http://sourceforge.net/projects/cob/\">" +
+            "http://sourceforge.net/projects/cob/</a><br>" +  "<br>" +
             "</html>" ;
 
         AboutBoxDialog dlg = new AboutBoxDialog(infoAbout, "About ATO Editor") ;

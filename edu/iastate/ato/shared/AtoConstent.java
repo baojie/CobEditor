@@ -13,7 +13,7 @@ public interface AtoConstent
     public String termRelationTable = "relation" ;
 
     public static final String IMPORT = "import", NESTED_IN = "nested_in" ;
-    public final static String APP_NAME = "Indus DAG editor" ;
+    public final static String APP_NAME = "COB editor" ;
 
     public static final String JDBC_DRIVER = "org.postgresql.Driver" ;
 
