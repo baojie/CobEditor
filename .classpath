@@ -1,6 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <classpath>
-	<classpathentry kind="src" path=""/>
 	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER"/>
 	<classpathentry kind="lib" path="lib/dbswing.jar"/>
 	<classpathentry kind="lib" path="lib/dx.jar"/>
@@ -13,5 +12,6 @@
 	<classpathentry kind="lib" path="lib/xercesImpl.jar"/>
 	<classpathentry kind="lib" path="lib/xml-apis.jar"/>
 	<classpathentry kind="lib" path="lib/postgresql-8.1-405.jdbc2.jar"/>
-	<classpathentry kind="output" path=""/>
+	<classpathentry kind="src" path="src"/>
+	<classpathentry kind="output" path="bin"/>
 </classpath>

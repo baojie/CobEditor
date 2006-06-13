@@ -1,9 +1,0 @@
-[PropertyInfo]
-limit,int,false,false, , ,false,<default>
-redoStack,java.util.Stack,false,false, , ,false,<default>
-undoStack,java.util.Stack,false,false, , ,false,<default>
-[IconNames]
-
-
-
-
