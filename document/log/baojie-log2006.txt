@@ -47,4 +47,5 @@
 * Meet with Laron, on how to generate text-based tree from the database
   demostrtated in PackageView.onExpand() 
 * Fix a bug in JDBCUtils.replaceDangerousChar()
+* Changed the application name from "INDUS DAG Editor" to "COB Editor"
    
