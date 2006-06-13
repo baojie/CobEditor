@@ -1,0 +1,11 @@
+[PropertyInfo]
+db,java.sql.Connection,false,false, , ,false,<default>
+driver,String,false,false, , ,false,<default>
+password,String,false,false, , ,false,<default>
+url,String,false,false, , ,false,<default>
+user,String,false,false, , ,false,<default>
+[IconNames]
+
+
+
+

@@ -1,0 +1,12 @@
+[PropertyInfo]
+dragDropListener,edu.iastate.utils.gui.DragDropListener,false,false, , ,true,<default>
+dragSource,java.awt.dnd.DragSource,false,false, , ,false,<default>
+dropnode,javax.swing.tree.DefaultMutableTreeNode,false,false, , ,false,<default>
+enableDragDrop,boolean,false,false, , ,false,<default>
+selnode,javax.swing.tree.DefaultMutableTreeNode,false,false, , ,false,<default>
+treemodel,javax.swing.tree.DefaultTreeModel,false,false, , ,false,<default>
+[IconNames]
+
+
+
+

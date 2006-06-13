@@ -1,0 +1,18 @@
+[PropertyInfo]
+cloned,java.util.Set,false,false, , ,false,<default>
+comment,Object,false,false, , ,true,<default>
+homePackageNode,edu.iastate.ato.tree.PackageNode,false,false, , ,false,<default>
+localName,String,false,false, , ,true,<default>
+mergedWith,edu.iastate.ato.tree.DbTermNode,false,false, , ,false,<default>
+oid,String,false,false, , ,true,<default>
+readOnly,boolean,false,false, , ,true,<default>
+showPackageInformation,boolean,false,false, , ,false,<default>
+thisTerm,edu.iastate.ato.po.DbTerm,false,false, , ,false,<default>
+type,short,false,false, , ,true,<default>
+userObject,Object,false,false, , ,true,<default>
+viewMode,String,false,false, , ,true,<default>
+[IconNames]
+
+
+
+
