@@ -12,6 +12,6 @@
 	<classpathentry kind="lib" path="lib/xercesImpl.jar"/>
 	<classpathentry kind="lib" path="lib/xml-apis.jar"/>
 	<classpathentry kind="lib" path="lib/postgresql-8.1-405.jdbc2.jar"/>
-	<classpathentry kind="src" path="src"/>
+	<classpathentry excluding="edu/iastate/" kind="src" path="src"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>
