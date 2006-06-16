@@ -49,3 +49,10 @@
 * Fix a bug in JDBCUtils.replaceDangerousChar()
 * Changed the application name from "INDUS DAG Editor" to "COB Editor"
    
+2006-06-14(Wed):
+* Peter has the a version of the user manual
+
+2006-06-16(Fri):
+* Fix the bug : relation view doesn't show expand
+   
+   

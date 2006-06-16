@@ -285,7 +285,17 @@ public class MOEditor extends MOEditorGui implements MessageHandler {
 	// 2005-08-19
 	public void onClose(ActionEvent e) {
 		if (selectedServer != null) {
-			closeOntology(this.selectedServer, false);
+			// save it first
+			int answer = JOptionPane.showConfirmDialog(null,
+					"Save changes ?");
+			if (answer == JOptionPane.YES_OPTION) {
+				onSubmit(e);
+			}
+		
+			// cancel all checked-out packages
+			onCancalAllEditing(e);
+			// close the connection
+			closeOntology(this.selectedServer, false);			
 		} else {
 			Debug.trace("No ontology is connected");
 		}
@@ -442,6 +452,7 @@ public class MOEditor extends MOEditorGui implements MessageHandler {
 	 *            ActionEvent
 	 */
 	public void onSubmit(ActionEvent e) {
+		
 		this.paneMain.packageView.onSave();
 	}
 
@@ -547,6 +558,7 @@ public class MOEditor extends MOEditorGui implements MessageHandler {
 	public void onReload(ActionEvent e) {
 		paneMain.rebuild(conn.db);
 		this.paneDetails.rebuild(conn.db);
+		onCancalAllEditing(e);
 	}
 
 	// 2005-08-21

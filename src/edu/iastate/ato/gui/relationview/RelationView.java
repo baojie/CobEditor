@@ -52,7 +52,21 @@ public class RelationView extends TypedTreePanel
 
         TypedNode root = new TypedNode("Ontology", ATOTreeNode.ROOT,
             relation + " hierarchy of the ontology") ;
+        
+        reload(root);
 
+        treeOntology.setTop(root) ;
+        ATOTreeRender treeRender = new ATOTreeRender() ;
+        treeOntology.setCellRenderer(treeRender) ;
+        treeOntology.addMouseListener(new TreeClickListener(treeOntology)) ;
+
+        treeLoader = new Term2Tree(db, relation, true) ;
+        treeLoader.showPackageInformation = false ;
+    }
+    
+    void reload(TypedNode root)
+    {
+    	root.removeAllChildren();
         // make the meta node for isolated nodes
         isolated = new MetaTreeNode("Isolated Terms",
             "Terms have no parents or children is this relation") ;
@@ -62,14 +76,6 @@ public class RelationView extends TypedTreePanel
         int n = OntologyQuerier.getObsoleteTermCount(db, null) ;
         obsolete = new MetaTreeNode("Obsolete(" + n + ")", null) ;
         root.add(obsolete) ;
-
-        treeOntology.setTop(root) ;
-        ATOTreeRender treeRender = new ATOTreeRender() ;
-        treeOntology.setCellRenderer(treeRender) ;
-        treeOntology.addMouseListener(new TreeClickListener(treeOntology)) ;
-
-        treeLoader = new Term2Tree(db, relation, true) ;
-        treeLoader.showPackageInformation = false ;
     }
 
     void makeTree()
@@ -106,6 +112,7 @@ public class RelationView extends TypedTreePanel
         }
         else if(selectedNode instanceof DbTermNode)
         {
+        	System.out.println("expand a term @ relation view");
             // if it is a cloned node, jump to the source
             if(selectedNode instanceof DBTermCloneNode)
             {
@@ -126,24 +133,28 @@ public class RelationView extends TypedTreePanel
         }
         else if(selectedNode.getType() == ATOTreeNode.ROOT)
         {
-            // if not yet loaded
-            if(selectedNode.getChildCount() == 1)
+        	System.out.println("expand root @ relation view");
+            // if not yet loaded : has two children: isolated, obsolete
+            if(selectedNode.getChildCount() != 2)
             {
-                // load roots
-                treeLoader.makeDagFromRoots(selectedNode, 0, false, null) ;
+            	reload(selectedNode);
             }
+            //load roots
+            treeLoader.makeDagFromRoots(selectedNode, 0, false, null) ;            
+            
         }
         else if(selectedNode == this.isolated)
         {
+        	System.out.println("expand isolated terms @ relation view");
             // load isolated nodes
             selectedNode.removeAllChildren() ;
             treeLoader.addIsolatedTerms(selectedNode) ;
         }
         else if(selectedNode == this.obsolete)
         {
-            // load isolated nodes
+        	System.out.println("expand obsolete terms @ relation view");
+//        	load all obsoleteNodes
             selectedNode.removeAllChildren() ;
-            // load all obsoleteNodes
             treeLoader.addObsoleteTerms(obsolete, null) ;
         }
         treeOntology.getModel().reload(selectedNode) ;

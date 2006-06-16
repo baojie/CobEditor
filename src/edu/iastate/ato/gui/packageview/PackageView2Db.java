@@ -65,6 +65,7 @@ public class PackageView2Db
 // do not save a read only node / unmodified node
         if(atoNode.isReadOnly() || !atoNode.isChanged())
         {
+        	System.out.println("ready only or not changes: " + atoNode);
             return ;
         }
 

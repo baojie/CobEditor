@@ -221,7 +221,7 @@ public class PackageTreeEditor extends PackageTreeEditorBasis
                 {
                     if(!isCloned)
                     {
-                        addMenuItem("Clone Term", IconLib.iconCloneTerm,
+                        addMenuItem("Copy Term", IconLib.iconCloneTerm,
                             new CloneTermAction(theTerm)) ;
                         addMenuItem("Insert Sub Term", IconLib.iconAddSub,
                             new CreateSubTermAction(theTerm)) ;
