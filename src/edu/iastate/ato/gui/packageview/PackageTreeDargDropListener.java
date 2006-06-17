@@ -107,7 +107,6 @@ public class PackageTreeDargDropListener extends DragDropListener
                 tree.modified = true;
             }
         }
-
     }
 
     private void movePackageToPackage(PackageNode sourcePkg,

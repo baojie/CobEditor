@@ -10,6 +10,7 @@ import edu.iastate.ato.tree.ATOTreeNode ;
 import edu.iastate.ato.tree.DBTermCloneNode ;
 import edu.iastate.ato.tree.DbTermNode ;
 import edu.iastate.ato.tree.PackageNode ;
+import edu.iastate.utils.Debug;
 
 /**
  * <p>@author Jie Bao</p>
@@ -55,6 +56,10 @@ public class PackageView2Db
         //System.out.println("    node status: " + atoNode.status2string());
     }
 
+    /**
+     * Save edges in a package
+     * @param node
+     */
     private void saveEdge(TypedNode node)
     {
         ATOTreeNode atoNode = (ATOTreeNode)node ;
@@ -63,9 +68,10 @@ public class PackageView2Db
         //System.out.println(" status  " + atoNode.status2string());
 
 // do not save a read only node / unmodified node
-        if(atoNode.isReadOnly() || !atoNode.isChanged())
+        if( (atoNode.isReadOnly() && ! (node instanceof DBTermCloneNode))
+        		|| !atoNode.isChanged())
         {
-        	System.out.println("ready only or not changes: " + atoNode);
+        	//System.out.println("ready only or not changes: " + atoNode);
             return ;
         }
 
@@ -77,7 +83,7 @@ public class PackageView2Db
             {
                 savePackageEdge((PackageNode)node) ;
             }
-            else if(node instanceof DbTermNode)
+            else if(node instanceof DbTermNode || node instanceof DBTermCloneNode)
             { // save a term
                 saveTermEdge((DbTermNode)node) ;
             }
@@ -218,7 +224,7 @@ public class PackageView2Db
                 node.getViewMode(),
                 parent_oid, MOEditor.user.name) ;
 
-            //Debug.trace("save edge : " + suc);
+            //Debug.trace("save edge : " + parent +"->" + node);
         }
     }
 
@@ -260,7 +266,7 @@ public class PackageView2Db
         for(PackageNode pkg : allPackages)
         {
             saveEdge(pkg) ;
-            Vector<DbTermNode> terms = tree.getTermsInPackage(pkg) ;
+            Vector<DbTermNode> terms = PackageTree.getTermsInPackage(pkg) ;
             for(DbTermNode term : terms)
             {
                 if(term.isMerged())

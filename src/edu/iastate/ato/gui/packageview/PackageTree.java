@@ -241,8 +241,8 @@ public class PackageTree extends TypedTree
     {
         for(int i = 0 ; i < node.getChildCount() ; i++)
         {
-            if(node.getChildAt(i) instanceof DbTermNode &&
-                !(node.getChildAt(i) instanceof DBTermCloneNode))
+            if(node.getChildAt(i) instanceof DbTermNode 
+            	/*&& !(node.getChildAt(i) instanceof DBTermCloneNode)*/)
             {
                 allnode.add((DbTermNode)node.getChildAt(i)) ;
                 getTerms((DbTermNode)node.getChildAt(i), allnode) ;
