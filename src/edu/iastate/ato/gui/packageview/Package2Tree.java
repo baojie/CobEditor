@@ -72,6 +72,7 @@ public class Package2Tree
         {
             String ids = (String)from.getOid() ;
             Vector children = OntologyQuerier.getChildrenPackage(db, ids) ;
+
             System.out.println(ids + " -> " + children) ;
             for(int i = 0 ; i < children.size() ; i++)
             {
@@ -99,8 +100,8 @@ public class Package2Tree
         tree.setTop(node) ;
         return tree ;
     }
-
-    /**
+    
+     /**
      * For test purpose
      * @param args String[]
      */

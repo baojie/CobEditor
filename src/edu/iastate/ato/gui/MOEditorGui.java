@@ -27,7 +27,7 @@ public class MOEditorGui extends MOEditorBasis
     {
         try
         {
-            jbInit() ;
+            jbInit() ; 
         }
         catch(Exception ex)
         {
@@ -72,6 +72,8 @@ public class MOEditorGui extends MOEditorBasis
     protected JMenuItem menuExportOWL = new JMenuItem() ;
     protected JMenuItem menuExportOBO = new JMenuItem() ;
     protected JMenuItem menuImportOBO = new JMenuItem() ;
+    //LaRon 06/14/06
+    protected JMenuItem menuExportTEXT = new JMenuItem();
 
     protected JMenu jmenuHelp = new JMenu() ;
     protected JMenuItem menuHelp = new JMenuItem() ;
@@ -170,6 +172,11 @@ public class MOEditorGui extends MOEditorBasis
 
         menuImportOBO.setText("Import from OBO Format") ;
         menuImportOBO.setIcon(IconLib.iconBlank) ;
+        
+        //LaRon Hughes 06/14/06
+        menuExportTEXT.setText("Export to TEXT Format") ;
+        menuExportTEXT.setIcon(IconLib.iconBlank) ;
+        
 
         makeToolbar() ;
 
@@ -252,6 +259,8 @@ public class MOEditorGui extends MOEditorBasis
         jmenuEdit.add(menuExportOWL) ;
         jmenuEdit.add(menuExportOBO) ;
         jmenuEdit.add(menuImportOBO) ;
+        //LaRon 06/14/06
+        jmenuEdit.add(menuExportTEXT);
 
         jmenuSetting.add(menuSetServer) ;
         jmenuSetting.add(menuConfig) ;

@@ -175,7 +175,7 @@ public abstract class PackageTreeEditorBasis extends TypedTreeEditor
                 return(Boolean)editableTable.get(pkg) ;
             }
             else
-            { // not found, query the database
+            {// not found, query the database
                 boolean mayI = UserManager.hasWritePrivilege(db, user,
                     pkg.getOid()) ;
                 editableTable.put(pkg, mayI) ;

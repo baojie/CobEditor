@@ -198,4 +198,11 @@ public class RelationView extends TypedTreePanel
         }
     }
 
+	//LaRon 06/18/06
+	public void DB2TEXT(String fileName) {
+		// TODO Auto-generated method stub
+		
+	}
+
+	
 }

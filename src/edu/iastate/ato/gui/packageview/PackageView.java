@@ -5,6 +5,10 @@ import java.sql.Connection ;
 import java.awt.BorderLayout ;
 import java.awt.event.MouseAdapter ;
 import java.awt.event.MouseEvent ;
+import java.io.BufferedWriter;
+import java.io.FileWriter;
+import java.io.IOException;
+
 import javax.swing.JOptionPane ;
 import javax.swing.JScrollPane ;
 import javax.swing.tree.TreePath ;
@@ -76,7 +80,8 @@ public class PackageView extends TypedTreePanel
 
     public void onExpand()
     {
-        TypedNode selected = (TypedNode)treeOntology.getSelectedNode() ;
+    	
+    	TypedNode selected = (TypedNode)treeOntology.getSelectedNode() ;
 
         if(selected instanceof PackageNode)
         {
@@ -93,6 +98,22 @@ public class PackageView extends TypedTreePanel
         }
     }
 
+    
+    //LaRon 06/18/06
+    public void DB2TEXT(String fileName)
+    {
+    	TypedNode selected = (TypedNode)treeOntology.getSelectedNode() ;
+        //print currently selected/expanded tree
+        try{
+        	BufferedWriter out = new BufferedWriter(new FileWriter(fileName));
+        	out.write(treeOntology.toString());
+        	out.close();
+        	}
+            catch(IOException ex)
+            {
+        }
+    }
+        
     // 2005-08-23
     public void expandPackage(PackageNode thePackage)
     {
@@ -121,7 +142,7 @@ public class PackageView extends TypedTreePanel
         tree.save() ;
     }
 
-    class TreeClickListener extends MouseAdapter
+    public class TreeClickListener extends MouseAdapter
     {
         TypedTree tree ;
         public TreeClickListener(TypedTree tree)
@@ -201,4 +222,5 @@ public class PackageView extends TypedTreePanel
         }
     }
 
+	
 }
