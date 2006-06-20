@@ -603,50 +603,7 @@ public class MOEditor extends MOEditorGui implements MessageHandler
         catch(Exception ex)
         {
         }
-    }	public void messageMap() {
-		try {
-			MessageMap.mapAction(this.btnUndo, this, "onUndo");
-			MessageMap.mapAction(this.menuUndo, this, "onUndo");
-			MessageMap.mapAction(this.btnRedo, this, "onRedo");
-			MessageMap.mapAction(this.menuRedo, this, "onRedo");
-			MessageMap.mapAction(this.btnConfig, this, "onConfig");
-			MessageMap.mapAction(this.btnSubmit, this, "onSubmit");
-			MessageMap.mapAction(this.btnAbout, this, "onAbout");
-			MessageMap.mapAction(this.menuAbout, this, "onAbout");
-			MessageMap.mapAction(this.btnExpand, this, "onExpand");
-			MessageMap.mapAction(this.menuExpand, this, "onExpand");
-			MessageMap.mapAction(this.menuExpandAll, this, "onExpandAll");
-			MessageMap.mapAction(this.btnHelp, this, "onHelp");
-			MessageMap.mapAction(this.menuHelp, this, "onHelp");
-			MessageMap.mapAction(this.btnReload, this, "onReload");
-			MessageMap.mapAction(this.btnFind, this, "onFind");
-			MessageMap.mapAction(this.menuFind, this, "onFind");
-			MessageMap.mapAction(this.menuFindNext, this, "onFindNext");
-			MessageMap.mapAction(this.menuOntologySchema, this,
-					"onOntologySchema");
-			MessageMap.mapAction(this.menuConfig, this, "onConfig");
-			MessageMap.mapAction(this.menuCancalAllEditing, this,
-					"onCancalAllEditing");
-			MessageMap.mapAction(this.menuExportOWL, this, "onExportOWL");
-			MessageMap.mapAction(this.menuExportOBO, this, "onExportOBO");
-			MessageMap.mapAction(this.menuLoad, this, "onLoad");
-			MessageMap.mapAction(this.menuClose, this, "onClose");
-			MessageMap.mapAction(this.menuLogin, this, "onLogin");
-			MessageMap.mapAction(this.menuLogout, this, "onLogout");
-			MessageMap.mapAction(this.menuSetServer, this, "onSetServer");
-			MessageMap.mapAction(this.menuClear, this, "onClear");
-			MessageMap.mapAction(this.menuImportOBO, this, "onImportOBO");
-			MessageMap.mapAction(this.menuUserMgmt, this, "onUserMgmt");
-			MessageMap.mapAction(this.btnBuddy, this, "onBuddy");
-
-			mainFrame.addWindowListener(new WindowAdapter() {
-				public void windowClosing(WindowEvent evt) {
-					onExit();
-				}
-			});
-		} catch (Exception ex) {
-		}
-	}
+    }	
 
     // 2005-08-25
     public void onBuddy(ActionEvent e)
