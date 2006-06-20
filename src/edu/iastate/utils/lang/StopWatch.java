@@ -3,6 +3,14 @@ package edu.iastate.utils.lang ;
 import java.util.Date ;
 
 /**
+ * 
+ * Example:
+ *      StopWatch w = new StopWatch() ;
+        w.start() ;
+        treeLoader.makeDagFromRootsQuick(this, cutoff, true, this) ;
+        w.stop();
+        System.out.println(w.print());
+ * 
  * <p>@author Jie Bao</p>
  * <p>@since 2005-08-30</p>
  */
