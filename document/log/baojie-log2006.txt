@@ -54,5 +54,12 @@
 
 2006-06-16(Fri):
 * Fix the bug : relation view doesn't show expand
+
+2006-06-18(Sat):
+* Organize jar files (into a single lib.jar) and delete unused images
+
+2006-06-19(Mon)
+* LaRon has done the "ExportText" programming
+ 
    
    
