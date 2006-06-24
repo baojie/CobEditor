@@ -6,7 +6,6 @@ import java.util.Map ;
 
 import java.awt.Color ;
 
-import edu.iastate.anthill.indus.iterator.DBTreeNode ;
 import edu.iastate.ato.po.Package ;
 
 /**

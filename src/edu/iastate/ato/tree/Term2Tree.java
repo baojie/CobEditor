@@ -5,7 +5,6 @@ import java.util.HashMap ;
 import java.util.Map ;
 import java.util.Vector ;
 
-import edu.iastate.anthill.indus.iterator.DBTreeNode ;
 import edu.iastate.anthill.indus.tree.TypedNode ;
 import edu.iastate.ato.po.DbPackage ;
 import edu.iastate.ato.po.DbTerm ;
