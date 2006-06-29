@@ -1,0 +1,12 @@
+2005-06-29(THU):
+	BUG Fixes
+	* Dragging a package onto another brought up a dialogue box asking "merge or don't merge?",
+	  the user has 3 options "yes", "no", and "cancel".  Selecting the "cancel" and "no" did
+	  the same thing.  Selecting "cancel" now does not affect the ontology.
+	  
+	* Hitting enter in either the Username or Password field, will be equivalent to hitting
+	  the "OK" button.
+
+	Features Implemented
+	* Selecting a term or package, the querying will be run on a seperate thread.
+		 Also a progress bar will be displayed.
