@@ -233,8 +233,11 @@ public class LoginPanel extends JPanel implements MessageHandler
         {
             MessageMap.mapAction(this.btnGuest, this, "onGuest") ;
             MessageMap.mapAction(this.btnRegister, this, "onRegister") ;
-            MessageMap.mapAction(this.btnCancel, this, "onCancel") ;
+            MessageMap.mapAction(this.btnCancel, this, "onCancel");
+            
             MessageMap.mapAction(this.btnOK, this, "onOK") ;
+            MessageMap.mapAction(this.passTxt, this, "onOK") ;
+            MessageMap.mapAction(this.userTxt, this, "onOK") ;
         }
         catch(Exception ex)
         {
