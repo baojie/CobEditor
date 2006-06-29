@@ -8,8 +8,6 @@ import java.util.Map ;
 import java.awt.HeadlessException ;
 import javax.swing.JOptionPane ;
 
-import edu.iastate.anthill.indus.tree.TypedNode ;
-import edu.iastate.anthill.indus.tree.TypedTreeEditor ;
 import edu.iastate.ato.gui.MOEditor ;
 import edu.iastate.ato.po.DbPackage ;
 import edu.iastate.ato.po.DbTerm ;
@@ -24,6 +22,8 @@ import edu.iastate.ato.tree.PackageNode ;
 import edu.iastate.utils.gui.JStatusBar ;
 import java.util.* ;
 import edu.iastate.utils.lang.StopWatch ;
+import edu.iastate.utils.tree.TypedNode;
+import edu.iastate.utils.tree.TypedTreeEditor;
 
 public abstract class PackageTreeEditorBasis extends TypedTreeEditor
 {

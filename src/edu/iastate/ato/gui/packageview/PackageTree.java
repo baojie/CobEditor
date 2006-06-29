@@ -4,8 +4,6 @@ import java.sql.Connection ;
 import java.util.Enumeration ;
 import java.util.Vector ;
 
-import edu.iastate.anthill.indus.tree.TypedNode ;
-import edu.iastate.anthill.indus.tree.TypedTree ;
 import edu.iastate.ato.gui.MOEditor ;
 import edu.iastate.ato.po.OntologyQuerier ;
 import edu.iastate.ato.po.Package ;
@@ -13,6 +11,8 @@ import edu.iastate.ato.tree.ATOTreeNode ;
 import edu.iastate.ato.tree.DBTermCloneNode ;
 import edu.iastate.ato.tree.DbTermNode ;
 import edu.iastate.ato.tree.PackageNode ;
+import edu.iastate.utils.tree.TypedNode;
+import edu.iastate.utils.tree.TypedTree;
 
 /**
  * <p>@author Jie Bao</p>

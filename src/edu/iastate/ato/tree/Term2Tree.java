@@ -5,11 +5,11 @@ import java.util.HashMap ;
 import java.util.Map ;
 import java.util.Vector ;
 
-import edu.iastate.anthill.indus.tree.TypedNode ;
 import edu.iastate.ato.po.DbPackage ;
 import edu.iastate.ato.po.DbTerm ;
 import edu.iastate.ato.po.OntologyQuerier ;
 import edu.iastate.ato.shared.LongTask ;
+import edu.iastate.utils.tree.TypedNode;
 
 /**
  * <p>@author Jie Bao</p>

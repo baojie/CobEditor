@@ -1,4 +1,4 @@
-package edu.iastate.anthill.indus.tree;
+package edu.iastate.utils.tree;
 
 import java.util.HashMap;
 import java.util.Map;

@@ -6,7 +6,6 @@ import java.util.Vector ;
 import javax.swing.JFrame ;
 import javax.swing.JScrollPane ;
 
-import edu.iastate.anthill.indus.tree.TypedTree ;
 import edu.iastate.ato.gui.MOEditor ;
 import edu.iastate.ato.gui.OntologyServerInfo ;
 import edu.iastate.ato.po.DbPackage ;
@@ -17,6 +16,7 @@ import edu.iastate.ato.tree.PackageNode ;
 
 import edu.iastate.utils.Debug ;
 import edu.iastate.utils.sql.LocalDBConnection ;
+import edu.iastate.utils.tree.TypedTree;
 
 /**
  * <p>@author Jie Bao</p>

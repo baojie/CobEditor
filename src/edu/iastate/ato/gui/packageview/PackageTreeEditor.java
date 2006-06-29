@@ -9,8 +9,6 @@ import java.awt.event.ActionListener ;
 import javax.swing.JOptionPane ;
 import javax.swing.JSeparator ;
 
-import edu.iastate.anthill.indus.tree.TypedNode ;
-import edu.iastate.anthill.indus.tree.TypedTreeEditor ;
 import edu.iastate.ato.agent.ChatPanel ;
 import edu.iastate.ato.agent.MoAgent ;
 import edu.iastate.ato.gui.MOEditor ;
@@ -32,6 +30,8 @@ import edu.iastate.ato.tree.PackageNode ;
 import edu.iastate.utils.Debug ;
 import edu.iastate.utils.gui.GUIUtils ;
 import edu.iastate.utils.net.EmailTools ;
+import edu.iastate.utils.tree.TypedNode;
+import edu.iastate.utils.tree.TypedTreeEditor;
 
 /**
  * <p>@author Jie Bao</p>

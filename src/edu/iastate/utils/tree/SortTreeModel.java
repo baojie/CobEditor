@@ -1,4 +1,4 @@
-package edu.iastate.anthill.indus.tree;
+package edu.iastate.utils.tree;
 
 // SortTreeModel.java
 // This class is similar to the DefaultTreeModel, but it keeps

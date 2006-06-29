@@ -1,6 +1,6 @@
 package edu.iastate.ato.po;
 
-import edu.iastate.anthill.indus.tree.TypedNode;
+import edu.iastate.utils.tree.TypedNode;
 
 /**
  *

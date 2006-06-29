@@ -236,6 +236,8 @@ public class LoginPanel extends JPanel implements MessageHandler
             MessageMap.mapAction(this.btnCancel, this, "onCancel");
             
             MessageMap.mapAction(this.btnOK, this, "onOK") ;
+            
+            // Peter Wong 2006-06-29: login with "Enter"
             MessageMap.mapAction(this.passTxt, this, "onOK") ;
             MessageMap.mapAction(this.userTxt, this, "onOK") ;
         }

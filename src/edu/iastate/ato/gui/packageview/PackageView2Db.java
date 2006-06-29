@@ -3,7 +3,6 @@ package edu.iastate.ato.gui.packageview ;
 import java.sql.Connection ;
 import java.util.Vector ;
 
-import edu.iastate.anthill.indus.tree.TypedNode ;
 import edu.iastate.ato.gui.MOEditor ;
 import edu.iastate.ato.po.OntologyEdit ;
 import edu.iastate.ato.tree.ATOTreeNode ;
@@ -11,6 +10,7 @@ import edu.iastate.ato.tree.DBTermCloneNode ;
 import edu.iastate.ato.tree.DbTermNode ;
 import edu.iastate.ato.tree.PackageNode ;
 import edu.iastate.utils.Debug;
+import edu.iastate.utils.tree.TypedNode;
 
 /**
  * <p>@author Jie Bao</p>

@@ -8,8 +8,6 @@ import java.awt.event.MouseEvent ;
 import javax.swing.JScrollPane ;
 import javax.swing.tree.TreePath ;
 
-import edu.iastate.anthill.indus.tree.TypedNode ;
-import edu.iastate.anthill.indus.tree.TypedTree ;
 import edu.iastate.ato.gui.MOEditor ;
 import edu.iastate.ato.gui.TypedTreePanel ;
 import edu.iastate.ato.po.OntologyQuerier ;
@@ -19,6 +17,8 @@ import edu.iastate.ato.tree.DBTermCloneNode ;
 import edu.iastate.ato.tree.DbTermNode ;
 import edu.iastate.ato.tree.MetaTreeNode ;
 import edu.iastate.ato.tree.Term2Tree ;
+import edu.iastate.utils.tree.TypedNode;
+import edu.iastate.utils.tree.TypedTree;
 
 /**
  * <p>@author Jie Bao</p>

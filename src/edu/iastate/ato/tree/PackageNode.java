@@ -9,7 +9,6 @@ import javax.swing.Icon ;
 import javax.swing.JOptionPane ;
 import javax.swing.JProgressBar ;
 
-import edu.iastate.anthill.indus.tree.TypedNode ;
 import edu.iastate.ato.gui.MOEditor ;
 import edu.iastate.ato.gui.packageview.PackageTree ;
 import edu.iastate.ato.po.DbPackage ;
@@ -18,6 +17,7 @@ import edu.iastate.ato.shared.IconLib ;
 
 import edu.iastate.utils.Debug ;
 import edu.iastate.utils.lang.StopWatch ;
+import edu.iastate.utils.tree.TypedNode;
 
 /**
  * <p>@author Jie Bao</p>

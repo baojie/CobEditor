@@ -1,7 +1,7 @@
 package edu.iastate.ato.tree ;
 
-import edu.iastate.anthill.indus.tree.TypedTreeRender ;
 import edu.iastate.ato.shared.IconLib ;
+import edu.iastate.utils.tree.TypedTreeRender;
 
 /**
  * Animal Trait Ontology Tree Render

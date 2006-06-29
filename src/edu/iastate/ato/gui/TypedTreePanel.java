@@ -2,7 +2,7 @@ package edu.iastate.ato.gui ;
 
 import javax.swing.JPanel ;
 
-import edu.iastate.anthill.indus.tree.TypedTree ;
+import edu.iastate.utils.tree.TypedTree;
 
 /**
  * <p>@author Jie Bao</p>

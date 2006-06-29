@@ -16,7 +16,6 @@ import javax.swing.JLabel ;
 import javax.swing.JOptionPane ;
 import javax.swing.JScrollPane ;
 
-import edu.iastate.anthill.indus.tree.TypedTree ;
 import edu.iastate.ato.gui.dialog.LoginPanel ;
 import edu.iastate.ato.gui.dialog.OnlineBuddyPanel ;
 import edu.iastate.ato.gui.dialog.SchemaPanel ;
@@ -37,6 +36,7 @@ import edu.iastate.utils.Debug ;
 import edu.iastate.utils.gui.GUIUtils ;
 import edu.iastate.utils.io.FileUtils ;
 import edu.iastate.utils.lang.*;
+import edu.iastate.utils.tree.TypedTree;
 
 /**
  * <p>@author Jie Bao</p>
