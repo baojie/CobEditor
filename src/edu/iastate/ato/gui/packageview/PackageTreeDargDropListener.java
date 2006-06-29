@@ -117,11 +117,12 @@ public class PackageTreeDargDropListener extends DragDropListener
             // ask if to move or to merge
             int answer = JOptionPane.showConfirmDialog(null,
                 "Move here (NO to merge)? ") ;
+            
             if(answer == JOptionPane.YES_OPTION)
             {
                 tree.movePackage(sourcePkg, targetPkg) ;
             }
-            else
+            else if(answer == JOptionPane.NO_OPTION)
             {
                 // merge two packages
                 for(int i = 0 ; i < sourcePkg.getChildCount() ; i++)
@@ -140,7 +141,11 @@ public class PackageTreeDargDropListener extends DragDropListener
                 }
                 // mark the old package as deleted
                 sourcePkg.status = ATOTreeNode.DELETED_NODE ;
+                
             }
+            
+
+            // If Cancel is selected, nothing is done 
         }
     }
 

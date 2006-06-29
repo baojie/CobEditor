@@ -24,6 +24,7 @@ import edu.iastate.ato.tree.DbTermNode ;
 import edu.iastate.ato.tree.MetaTreeNode ;
 import edu.iastate.ato.tree.PackageNode ;
 import edu.iastate.ato.tree.Term2Tree ;
+import edu.iastate.utils.gui.JStatusBar;
 import edu.iastate.utils.lang.*;
 
 /**
@@ -163,11 +164,30 @@ public class PackageView extends TypedTreePanel
 
             if(e.getClickCount() == 1)
             {
-                StopWatch w = new StopWatch();
-                w.start();
-                MOEditor.theInstance.paneDetails.update(selectedNode) ;
-                w.stop();
-                System.out.println(w.print());
+                final JStatusBar statusBar = MOEditor.theInstance.statusBar ;
+                Thread t = new Thread()
+                {
+                    public void run()
+                    {
+                    	int pb = statusBar.addProgressBar(true, 0, 0) ;
+                    	String termOrPackage="";
+                        if(selectedNode instanceof DbTermNode){
+                        	termOrPackage= "Term";
+                        }else if(selectedNode instanceof DbTermNode){
+                        	termOrPackage= "Package";
+                        }
+                    	statusBar.updateProgressBar(pb,"Loading "+termOrPackage+": "+selectedNode.getLocalName());
+                    	
+                    	StopWatch w = new StopWatch();
+                        w.start();
+                        MOEditor.theInstance.paneDetails.update(selectedNode) ;
+                        w.stop();
+                        System.out.println(w.print());
+
+                        statusBar.removeProgressBar(pb);
+                    }
+                } ;
+                t.start() ;                
             }
             else if(e.getClickCount() == 2)
             {
