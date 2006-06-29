@@ -61,5 +61,13 @@
 2006-06-19(Mon)
 * LaRon has done the "ExportText" programming
  
+2006-06-23(Fri) 
+* Peter's user manual done
+ 
+2006-06-28(Wed)
+* Meet with Laron and Peter: bug list
+
+2006-06-29(Thu)
+* Put bug list on SF
    
    

@@ -133,8 +133,9 @@ public class PackageView extends TypedTreePanel
             if(answer == JOptionPane.YES_OPTION)
             {
                 onSave() ;
-            }
+            }            
         }
+        tree.modified = false;
     }
 
     public void onSave()

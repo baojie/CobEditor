@@ -19,7 +19,7 @@ public class BasicNamingPolicy extends NamingPolicy
      *
      * @param baseName String
      * @return String
-     * @todo Implement this edu.iastate.ato.ui.naming.NamingPolicy method
+     * @todo Implement this edu.iastate.anthill.cob.ui.naming.NamingPolicy method
      */
     public String makeNameWhenCreating(String baseName)
     {
