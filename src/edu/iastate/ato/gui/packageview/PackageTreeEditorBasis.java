@@ -86,7 +86,12 @@ public abstract class PackageTreeEditorBasis extends TypedTreeEditor
                 MOEditor.user.name, null) ;
             PackageNode newNode = new PackageNode(newPkg) ;
             newNode.status = ATOTreeNode.MODIFIED ;
+
+            // Peter: Makes sure the parent package asks whether to save or not, when editing is done.
+           // ((PackageNode)selected.getParent()).status = PackageNode.MODIFIED;
+            
             newNode.setViewMode(selected.getViewMode()) ;
+            newNode.status = PackageNode.MODIFIED;
 
             // submit the new package to the database (because we want the oid)
             newNode.save(db) ;
@@ -99,6 +104,7 @@ public abstract class PackageTreeEditorBasis extends TypedTreeEditor
                     newNode.getOid(), User.READ_WRITE) ;
             }
             ((PackageTree)tree).modified = true;
+            selected.status = PackageNode.MODIFIED;
             return newNode ;
         }
 
@@ -123,8 +129,12 @@ public abstract class PackageTreeEditorBasis extends TypedTreeEditor
         return true ;
     }
 
+    public void expandPackage(final PackageNode thePackage){
+    	expandPackage(thePackage, true);    	
+    }
+    
     // 2005-08-22 load with progress bar
-    public void expandPackage(final PackageNode thePackage)
+    public void expandPackage(final PackageNode thePackage, final boolean reload)
     {
         final JStatusBar statusBar = MOEditor.theInstance.statusBar ;
         Thread t = new Thread()
@@ -139,7 +149,7 @@ public abstract class PackageTreeEditorBasis extends TypedTreeEditor
                 try
                 {
                     // do something here
-                    thePackage.expand(db, statusBar.getProgressBar(pb)) ;
+                    thePackage.expand(db, statusBar.getProgressBar(pb), reload) ;
                     tree.getModel().reload(thePackage) ;
                 }
                 catch(Exception ex)
@@ -234,7 +244,10 @@ public abstract class PackageTreeEditorBasis extends TypedTreeEditor
             ATOTreeNode.type2slm(type), MOEditor.user.name, null,
             "false") ;
         DbTermNode newNode = new DbTermNode(t, home) ;
+        
         newNode.status = ATOTreeNode.MODIFIED ;
+        home.status = PackageNode.MODIFIED;
+        
         ((PackageTree)tree).modified = true;
 
         return newNode ;

@@ -46,11 +46,11 @@ public class PackageView2Db
             // save a package
             if(atoNode instanceof PackageNode)
             {
-                savePackage((PackageNode)node) ;
+                writePackage((PackageNode)node) ;
             }
             else if(node instanceof DbTermNode)
             { // save a term
-                saveTerm((DbTermNode)node) ;
+                writeTerm((DbTermNode)node) ;
             }
         }
         //System.out.println("    node status: " + atoNode.status2string());
@@ -81,11 +81,11 @@ public class PackageView2Db
             // save a package
             if(atoNode instanceof PackageNode)
             {
-                savePackageEdge((PackageNode)node) ;
+                writePackageEdge((PackageNode)node) ;
             }
             else if(node instanceof DbTermNode || node instanceof DBTermCloneNode)
             { // save a term
-                saveTermEdge((DbTermNode)node) ;
+                writeTermEdge((DbTermNode)node) ;
             }
             //tree.getModel().reload(atoNode);
         }
@@ -199,7 +199,7 @@ public class PackageView2Db
         }
     }
 
-    private void saveTerm(DbTermNode node)
+    private void writeTerm(DbTermNode node)
     {
         // save node information only if it is not a clone
         if(!(node instanceof DBTermCloneNode))
@@ -213,7 +213,7 @@ public class PackageView2Db
         }
     }
 
-    private void saveTermEdge(DbTermNode node)
+    private void writeTermEdge(DbTermNode node)
     {
         // save the tree edge
         TypedNode parent = (TypedNode)node.getParent() ;
@@ -228,13 +228,13 @@ public class PackageView2Db
         }
     }
 
-    private void savePackage(PackageNode node)
+    private void writePackage(PackageNode node)
     {
         // save the package information
         node.save(db) ;
     }
 
-    private void savePackageEdge(PackageNode node)
+    private void writePackageEdge(PackageNode node)
     {
         // save the tree edge, delete the old edge
         PackageNode parent = (PackageNode)node.getParent() ;
@@ -246,6 +246,70 @@ public class PackageView2Db
         }
     }
 
+     
+    private void savePackageNode(PackageNode pkg)
+    {
+    	saveNode(pkg) ;
+        Vector<DbTermNode> terms = tree.getTermsInPackage(pkg) ;
+        for(DbTermNode term : terms)
+        {
+            saveNode(term) ;
+        }
+    }
+
+    private void savePackageEdge(PackageNode pkg){
+    	saveEdge(pkg) ;
+        Vector<DbTermNode> terms = PackageTree.getTermsInPackage(pkg) ;
+        for(DbTermNode term : terms)
+        {
+            saveEdge(term) ;
+            if(!term.isMerged() && term.isChanged())
+            {
+                term.status = ATOTreeNode.UNMODIFIED ;
+                tree.getModel().reload(term) ;
+            }
+        }
+        pkg.status = ATOTreeNode.UNMODIFIED ;
+    }
+    
+    /**
+     * Saves an individual package
+     * @author Peter Wong
+     * @param pkg
+     */
+    public void savePackage(PackageNode pkg){
+    	savePackageNode(pkg);
+    	savePackageEdge(pkg);
+
+        // save edge change
+        Vector<DbTermNode> allMerged = new Vector<DbTermNode>() ;
+    	Vector<DbTermNode> terms = PackageTree.getTermsInPackage(pkg) ;
+        for(DbTermNode term : terms)
+        {
+            if(term.isMerged())
+            {
+                allMerged.add(term) ;
+            }
+        }
+        
+        for(int i=0; i<pkg.getChildCount();++i){
+        	if(pkg.getChildAt(i) instanceof PackageNode){
+        		PackageNode child = (PackageNode) pkg.getChildAt(i);
+        		if(child.status == PackageNode.DELETED_NODE){
+        			savePackage(child);
+        		}
+        	}
+        }
+        
+        // do merging
+        for(DbTermNode mergedNode : allMerged)
+        {
+            mergedNode.merge(db) ;
+            mergedNode.status = ATOTreeNode.UNMODIFIED ;
+            tree.getModel().reload(mergedNode.mergedWith) ;
+        }
+    }
+    
     public void saveTree()
     {
         Vector<PackageNode> allPackages = tree.getAllPackage() ;
@@ -254,30 +318,20 @@ public class PackageView2Db
         // save node change
         for(PackageNode pkg : allPackages)
         {
-            saveNode(pkg) ;
-            Vector<DbTermNode> terms = tree.getTermsInPackage(pkg) ;
-            for(DbTermNode term : terms)
-            {
-                saveNode(term) ;
-            }
+        	savePackageNode(pkg);
         }
         // save edge change
         Vector<DbTermNode> allMerged = new Vector<DbTermNode>() ;
         for(PackageNode pkg : allPackages)
         {
-            saveEdge(pkg) ;
+        	savePackageEdge(pkg);
+            
             Vector<DbTermNode> terms = PackageTree.getTermsInPackage(pkg) ;
             for(DbTermNode term : terms)
             {
                 if(term.isMerged())
                 {
                     allMerged.add(term) ;
-                }
-                saveEdge(term) ;
-                if(!term.isMerged() && term.isChanged())
-                {
-                    term.status = ATOTreeNode.UNMODIFIED ;
-                    tree.getModel().reload(term) ;
                 }
             }
             pkg.status = ATOTreeNode.UNMODIFIED ;

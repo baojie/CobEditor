@@ -136,6 +136,7 @@ public class PackageTree extends TypedTree
         {
             newPackage = ((DbTermNode)dropTarget).getHomePackageNode() ;
         }
+        newPackage.status = PackageNode.MODIFIED;
 
         Enumeration<DbTermNode> en = selected.breadthFirstEnumeration() ;
 
@@ -160,7 +161,8 @@ public class PackageTree extends TypedTree
             clone.status = ATOTreeNode.DELETED_UPEDGE ;
         }
 
-        getModel().reload(selected) ;
+        getModel().reload(selected);
+        getModel().reload(dropTarget);
 
         return newPackage ;
     }
@@ -197,7 +199,8 @@ public class PackageTree extends TypedTree
         DBTermCloneNode newNode = new DBTermCloneNode(selected) ;
         newNode.showPackageInformation = true ;
         newNode.setHomePackageNode(dropTarget.getHomePackageNode()) ;
-        getModel().insertNodeInto(newNode, dropTarget, 0) ;
+        
+        getModel().insertNodeInto(newNode, dropTarget, 0);
         newNode.status = ATOTreeNode.MODIFIED ;
         getModel().reload(newNode) ;
         return newNode ;
@@ -281,5 +284,14 @@ public class PackageTree extends TypedTree
             tree2db.saveTree() ;
             this.modified = false ;
         }
+    }
+    
+    public void savePackage(PackageNode pkg){
+    	if(pkg.status == PackageNode.MODIFIED)
+        {
+            PackageView2Db tree2db = new PackageView2Db(db, this) ;
+            tree2db.savePackage(pkg) ;
+            pkg.status = PackageNode.UNMODIFIED;
+        }    	
     }
 }

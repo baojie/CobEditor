@@ -121,6 +121,7 @@ public class PackageTreeDargDropListener extends DragDropListener
             if(answer == JOptionPane.YES_OPTION)
             {
                 tree.movePackage(sourcePkg, targetPkg) ;
+                
             }
             else if(answer == JOptionPane.NO_OPTION)
             {
@@ -132,16 +133,25 @@ public class PackageTreeDargDropListener extends DragDropListener
                     {
                         tree.getModel().removeNodeFromParent(n) ;
                         tree.getModel().insertNodeInto(n, targetPkg, 0) ;
+                        --i;
                         n.status = ATOTreeNode.MODIFIED ;
                     }
                     else if(n instanceof DbTermNode)
                     {
                         tree.moveBranch((DbTermNode)n, targetPkg) ;
+                        --i;
                     }
                 }
+                
+                tree.getModel().reload(targetPkg);
+                tree.getModel().reload(sourcePkg);
+                targetPkg.status = PackageNode.MODIFIED;
+                //sourcePkg.status = PackageNode.MODIFIED;
+                
                 // mark the old package as deleted
                 sourcePkg.status = ATOTreeNode.DELETED_NODE ;
                 
+                ((PackageNode)sourcePkg.getParent()).status = PackageNode.MODIFIED;    
             }
             
 

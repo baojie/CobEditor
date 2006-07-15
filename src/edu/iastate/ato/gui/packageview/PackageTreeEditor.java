@@ -365,6 +365,7 @@ public class PackageTreeEditor extends PackageTreeEditorBasis
                 {
                     tree.delete(theNode) ;
                 }
+                theNode.getHomePackageNode().status = PackageNode.MODIFIED;
                 ((PackageTree)tree).modified = true;
             }
         }
@@ -456,6 +457,7 @@ public class PackageTreeEditor extends PackageTreeEditorBasis
             tree.getModel().reload(n) ;
 
             newNode.status = ATOTreeNode.MODIFIED ;
+            newNode.getHomePackageNode().status = PackageNode.MODIFIED;
             ((PackageTree)tree).modified = true;
         }
     }
@@ -545,14 +547,25 @@ public class PackageTreeEditor extends PackageTreeEditorBasis
 
     public void quitEditing(PackageNode thePackageNode)
     {
-        UserManager.cancelEditing(db, thePackageNode.getOid(),
-            MOEditor.user.name) ;
-        thePackageNode.setReadOnly(true) ;
+    	int answer = -1;
+    	if(thePackageNode.status == PackageNode.MODIFIED){
+    		//ask to save
+            answer = JOptionPane.showConfirmDialog(this.fatherPanel, "Save Changes to "+thePackageNode.getLocalName()+"? ");
+            if(answer == JOptionPane.YES_OPTION)
+            {
+            	this.thisTree.savePackage(thePackageNode);
+            }
+    	}
+    	if(answer != JOptionPane.CANCEL_OPTION || answer == -1){
+        	thePackageNode.expanded = false; 
+        	UserManager.cancelEditing(db, thePackageNode.getOid(),
+                    MOEditor.user.name) ;
+                thePackageNode.setReadOnly(true) ;
 
-        // diseable the property editor if the node is under editing
-        MOEditor.theInstance.paneDetails.switchPropertyEditor(
-            thePackageNode) ;
-
+                // diseable the property editor if the node is under editing
+                MOEditor.theInstance.paneDetails.switchPropertyEditor(
+                    thePackageNode) ;
+        }
     }
 
     class EditPackageAction
@@ -596,7 +609,12 @@ public class PackageTreeEditor extends PackageTreeEditorBasis
             // if the package not yet expanded, expand it
             if(node.expanded == false)
             {
-                expandPackage(node) ;
+            	if( node.wasEdited == true){
+            		expandPackage(node, false) ;
+            	}else{
+            		expandPackage(node, true) ;
+            	}
+            	node.wasEdited = true;
             }
         }
         else
@@ -619,6 +637,7 @@ public class PackageTreeEditor extends PackageTreeEditorBasis
         public void actionPerformed(ActionEvent e)
         {
             theNode.markDeleted() ;
+            theNode.getHomePackageNode().status = PackageNode.MODIFIED;
             tree.getModel().reload(theNode) ;
             ((PackageTree)tree).modified = true;
         }
@@ -634,9 +653,13 @@ public class PackageTreeEditor extends PackageTreeEditorBasis
             this.theNode = theNode ;
         }
 
+        /* (non-Javadoc)
+         * @see java.awt.event.ActionListener#actionPerformed(java.awt.event.ActionEvent)
+         */
         public void actionPerformed(ActionEvent e)
         {
             theNode.status = ATOTreeNode.DELETED_UPEDGE ;
+            theNode.getHomePackageNode().status = PackageNode.MODIFIED;
             tree.getModel().reload(theNode) ;
             ((PackageTree)tree).modified = true;
         }
@@ -667,6 +690,7 @@ public class PackageTreeEditor extends PackageTreeEditorBasis
             if(answer == JOptionPane.YES_OPTION)
             {
                 theNode.markDeleted() ;
+                ((PackageNode)theNode.getParent()).status = PackageNode.MODIFIED;
                 tree.getModel().reload(theNode.getParent()) ;
                 ((PackageTree)tree).modified = true;
             }
@@ -675,27 +699,42 @@ public class PackageTreeEditor extends PackageTreeEditorBasis
 
     class CreateSuperPackageAction extends DefaultInsertParentAction
     {
-        public CreateSuperPackageAction(PackageNode theNode)
+        public PackageNode newPackageNode = null;
+        
+    	public CreateSuperPackageAction(PackageNode theNode)
         {
             super(theNode) ;
         }
+        
 
+        public void actionPerformed(ActionEvent e){
+        	super.actionPerformed(e);
+        	editPackage(newPackageNode);
+        }
+        
         protected TypedNode getNewNode()
         {
-            return makeNewPackageNode((PackageNode)theNode, null) ;
+            return (newPackageNode = makeNewPackageNode((PackageNode)theNode, null) );
         }
     }
 
     class CreateSubPackageAction extends DeafultCreateSubValueAction
     {
+    	public PackageNode newPackageNode = null;
+    	
         public CreateSubPackageAction(PackageNode parent)
         {
             super(parent) ;
         }
 
+        public void actionPerformed(ActionEvent e){
+        	super.actionPerformed(e); 
+        	editPackage(newPackageNode);        	
+        }
+
         protected TypedNode getNewNode()
         {
-            return makeNewPackageNode((PackageNode)parent, null) ;
+            return (newPackageNode = makeNewPackageNode((PackageNode)parent, null) );
         }
     }
 
@@ -812,6 +851,11 @@ public class PackageTreeEditor extends PackageTreeEditorBasis
             if(newName != null)
             {
                 theNode.rename(newName.toString()) ;
+                if( theNode instanceof PackageNode ){
+                	
+                }else if(theNode instanceof PackageNode ){
+                	
+                }
                 tree.getModel().reload(theNode) ;
                 //TreeNodeRenameEditing action = new TreeNodeRenameEditing(
                 //    theNode, oldName, newName);
