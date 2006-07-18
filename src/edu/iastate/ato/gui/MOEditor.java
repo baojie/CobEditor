@@ -118,6 +118,7 @@ public class MOEditor extends MOEditorGui implements MessageHandler
     // 2005-08-25
     public void updateUser(User newUser)
     {
+    	
         if(this.user == newUser)
         {
             return ;
@@ -396,7 +397,14 @@ public class MOEditor extends MOEditorGui implements MessageHandler
         this.paneDetails.rebuild(conn.db) ;
         mainFrame.setJMenuBar(makeFullMenuBar()) ;
         jToolBar1.setVisible(true) ;
-
+        
+	        // Enable Ontology Schema Menu Item, if user is an admin
+	        /*if( newUser.role.equals(User.ADMIN)){
+	        	this.menuOntologySchema.setEnabled(true);
+	        }else{
+	        	this.menuOntologySchema.setEnabled(false);
+	        }*/
+        
         // update the selected ontology information
         this.selectedServer = info ;
         selectedServer.loaded = true ;
@@ -409,6 +417,17 @@ public class MOEditor extends MOEditorGui implements MessageHandler
     public void onOntologySchema(ActionEvent e)
     {
         SchemaPanel p = new SchemaPanel(conn.db) ;
+        
+        // Enable Ontology Schema Menu Item, if user is an admin
+        if(user != null){
+	        if(user.role.equals(User.ADMIN)){
+	        	p.setEditable(true);
+	        }else{
+	        	p.setEditable(false);
+	        }
+        }
+        	
+        
         JDialog dlg = new JDialog(GUIUtils.getRootFrame(this)) ;
         dlg.getContentPane().add(p) ;
         dlg.setTitle("Ontology Schema") ;
@@ -735,7 +754,8 @@ public class MOEditor extends MOEditorGui implements MessageHandler
         {
             logout() ;
             updateUser(newUser) ;
-            updateTitle() ;
+            
+	        updateTitle() ;
         }
     }
 

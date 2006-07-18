@@ -149,10 +149,12 @@ public class PackageTree extends TypedTree
 
         // keep a clone at the original place. (for saving purpose)
         TypedNode oldParent = (TypedNode)selected.getParent() ;
-
+        //selected.getHomePackageNode().status = PackageNode.MODIFIED;
+        
         // move
-        //this.moveNode(selected, dropTarget);
-        dropTarget.add(selected) ;
+        this.moveNode(selected, dropTarget);
+        
+        //dropTarget.add(selected) ;
         selected.status = ATOTreeNode.MODIFIED ;
 
         if(oldParent instanceof DbTermNode)

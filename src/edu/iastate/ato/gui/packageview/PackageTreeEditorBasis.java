@@ -48,7 +48,7 @@ public abstract class PackageTreeEditorBasis extends TypedTreeEditor
         {
             return false;
         }
-        else if (!name.matches("[a-zA-Z][\\s\\w\\-._]*"))
+        else if (!name.matches("[a-zA-Z0-9][\\s\\w\\-._\\(\\)]*"))
         {
             return false;
         }

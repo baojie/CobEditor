@@ -62,7 +62,7 @@ public class BasicNamingPolicy extends NamingPolicy
         {
             return false ;
         }
-        else if(!name.matches("[a-zA-Z0-9][\\s\\w\\-._]*"))
+        else if(!name.matches("[a-zA-Z0-9][\\s\\w\\-._\\(\\)]*"))
         {
             return false ;
         }

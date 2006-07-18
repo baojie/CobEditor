@@ -65,7 +65,19 @@ public class SchemaPanel extends JPanel
         {
             exception.printStackTrace() ;
         }
+        
     }
+    
+    public void setEditable(boolean tog){
+    	 textRelation.setEnabled(tog);
+    	 textProperty.setEnabled(tog);
+    	 textPolicyDetails.setEnabled(tog);
+    	 lstNamingPolicy.setEnabled(tog);
+    	 otherPane.setEditable(tog);
+    	 btnSave.setEnabled(tog);
+    	 btnImportOBO.setEnabled(tog);
+    }
+    
 
     private void jbInit() throws Exception
     {
