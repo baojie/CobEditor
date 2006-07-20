@@ -24,6 +24,7 @@ import edu.iastate.ato.po.OntologySchema ;
 import edu.iastate.ato.po.TagValuePair ;
 import edu.iastate.ato.shared.IconLib ;
 import edu.iastate.ato.tree.DbTermNode ;
+import edu.iastate.ato.tree.PackageNode;
 
 import edu.iastate.utils.Debug ;
 import edu.iastate.utils.gui.LabelledItemPanel ;
@@ -161,20 +162,27 @@ public class TermPropertyPanel extends JPanel implements MessageHandler
             {
                 addProperty(pair.tag, pair.value) ;
             }
-            enableEditing(!readonly) ;
+                        
+            enableEditing(!readonly && ((PackageNode)selectedNode.getHomePackageNode()).editing ) ;
+        }else{
+        	enableEditing(false) ;
         }
         mainPane.validate() ;
         mainPane.invalidate() ;
         mainPane.repaint() ;
     }
-
+    
     public void enableEditing(boolean enabled)
     {
         for(JTextArea item : allItem.keySet())
         {
             item.setEditable(enabled) ;
         }
-        btnConfirm.setEnabled(enabled) ;
+        // Added these 2
+        btnAdd.setEnabled(enabled);
+    	btnCancel.setEnabled(enabled);
+    	
+    	btnConfirm.setEnabled(enabled);
     }
 
     public void messageMap()

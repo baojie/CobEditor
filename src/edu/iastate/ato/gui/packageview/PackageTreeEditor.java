@@ -557,7 +557,8 @@ public class PackageTreeEditor extends PackageTreeEditorBasis
             }
     	}
     	if(answer != JOptionPane.CANCEL_OPTION || answer == -1){
-        	thePackageNode.expanded = false; 
+        	thePackageNode.editing = false;
+    		thePackageNode.expanded = false; 
         	UserManager.cancelEditing(db, thePackageNode.getOid(),
                     MOEditor.user.name) ;
                 thePackageNode.setReadOnly(true) ;
@@ -602,7 +603,8 @@ public class PackageTreeEditor extends PackageTreeEditorBasis
         // make all term child editable
         if(suc)
         {
-            Debug.trace("You can edit terms in package '" +
+            node.editing = true;
+        	Debug.trace("You can edit terms in package '" +
                 node.getLocalName() + "'") ;
             //System.out.println("EditPackageAction: " + suc);
             node.setReadOnly(false) ;
