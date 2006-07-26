@@ -66,6 +66,33 @@ public class OntologyEdit
         return JDBCUtils.insertOrUpdateDatabase(db, "details", field_value, pks) ;
     }
 
+
+    public static boolean deleteTermProperty(Connection db, String term_oid,
+        String property)
+    {
+        if(property == null)
+        {
+            return false ;
+        }
+        /* e.g.
+         UPDATE details SET value = 'inch', author = 'user',  modified = '...'
+              WHERE  term = '000' AND attribute = 'ScaleUnit' or
+
+              INSERT INTO details ( term, attribute, value, author, modified)
+              VALUES ('000', 'ScaleUnit' , 'inch', 'user', '....');
+         */
+        Map field_value = new HashMap<String, String>() ;
+        field_value.put("term", term_oid) ;
+        field_value.put("attribute", property) ;
+
+        Vector pks = new Vector<String>() ;
+        pks.add("term") ;
+        pks.add("attribute") ;
+        
+        return JDBCUtils.delete(db,"details",field_value);
+        //return JDBCUtils.insertOrUpdateDatabase(db, "details", field_value, pks) ;
+    }
+    
     final public static SimpleDateFormat dateFormat = new
         SimpleDateFormat("yyyy-MM-dd HH:mm:ss z") ;
 

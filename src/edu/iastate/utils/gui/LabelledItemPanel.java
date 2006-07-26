@@ -4,6 +4,7 @@ import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.Insets;
 import javax.swing.BorderFactory;
+import javax.swing.JButton;
 import javax.swing.JComponent;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
@@ -23,6 +24,7 @@ public class LabelledItemPanel extends JPanel
 {
     /** The row to add the next labelled item to */
     private int myNextItemRow = 0;
+    
 
     public int itemInterval = 10; // 2005-07-23
 
@@ -39,7 +41,13 @@ public class LabelledItemPanel extends JPanel
         this.itemInterval = itermInterval;
         init();
     }
-
+    
+    public void setEditable(boolean tog){
+    	for(int i=0; i<this.getComponentCount(); ++i){
+    		this.getComponent(i).setEnabled(tog);    		
+    	}
+    }
+    
     /**
      * This method initialises the panel and layout manager.
      */
@@ -83,7 +91,7 @@ public class LabelledItemPanel extends JPanel
     // 2005-08-22
     public void addItem(JComponent labelItem, JComponent item)
     {
-        GridBagConstraints labelConstraints = new GridBagConstraints();
+    	GridBagConstraints labelConstraints = new GridBagConstraints();
 
         labelConstraints.gridx = 0;
         labelConstraints.gridy = myNextItemRow;

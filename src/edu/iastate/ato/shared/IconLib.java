@@ -36,6 +36,7 @@ public class IconLib
     public static ImageIcon iconAddSup = loadImageIcon("addsup.gif") ;
     public static ImageIcon iconAddSub = loadImageIcon("addsub.gif") ;
     public static ImageIcon iconDelete = loadImageIcon("delete.gif") ;
+    public static ImageIcon iconDelete_sm = loadImageIcon("delete_sm.gif") ;
     public static ImageIcon iconDeleteSub = loadImageIcon("deletesub.gif") ;
     public static ImageIcon iconDeleteSup = loadImageIcon("deletesup.gif") ;
     public static ImageIcon iconDbTree = loadImageIcon("dbtree.gif") ;

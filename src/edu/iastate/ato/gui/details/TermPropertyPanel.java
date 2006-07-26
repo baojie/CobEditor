@@ -2,11 +2,16 @@ package edu.iastate.ato.gui.details ;
 
 import java.sql.Connection ;
 import java.util.HashMap ;
+import java.util.HashSet;
 import java.util.Map ;
 import java.util.Vector ;
 
 import java.awt.BorderLayout ;
+import java.awt.Color;
+import java.awt.Insets;
 import java.awt.event.ActionEvent ;
+
+import javax.swing.BorderFactory;
 import javax.swing.JButton ;
 import javax.swing.JComboBox ;
 import javax.swing.JComponent ;
@@ -47,13 +52,16 @@ public class TermPropertyPanel extends JPanel implements MessageHandler
     JButton btnCancel = new JButton() ;
     JButton btnAdd = new JButton("Add") ;
 
-    LabelledItemPanel mainPane = new LabelledItemPanel(3) ;
+    LabelledItemPanel mainPane = new LabelledItemPanel(0) ;
     JScrollPane jScrollPane1 = new JScrollPane() ;
 
     JPanel paneButton = new JPanel() ;
     Vector<String> tp ;
     Map<JTextArea, JComponent> allItem =
         new HashMap<JTextArea, JComponent>() ;
+
+    HashSet<JTextArea> newItems = new HashSet<JTextArea>() ;
+    HashSet<JTextArea> deletedItems = new HashSet<JTextArea>() ;
 
     // map from the property name to its JTextField
     //Map<String, JTextField> attributeEditors = new HashMap();
@@ -77,16 +85,63 @@ public class TermPropertyPanel extends JPanel implements MessageHandler
             cb.setSelectedIndex(0) ;
         }
         JTextArea v = new JTextArea() ;
-        mainPane.addItem(cb, v) ;
-        allItem.put(v, cb) ;
+        
+        JPanel p = new JPanel();
+        p.add(createDeleteButton(v));
+        p.add(cb);
+        
+        mainPane.addItem(p, v) ;
+        allItem.put(v, cb);
+        newItems.add(v);
         return v ;
     }
 
+    public class OnDeletionHandler implements MessageHandler{
+    	public JTextArea vref;
+    	public OnDeletionHandler(JTextArea v){
+    		vref = v;
+    	}
+    	
+    	public void onDelete(ActionEvent e){
+    		vref.setEnabled(false);
+    		deletedItems.add(vref);
+    	}
+    	
+        public void messageMap(){
+        	
+        }
+    }
+    
+    private JButton createDeleteButton(JTextArea vref){
+    	JButton deleteButton = new JButton();
+		deleteButton.setMargin(new Insets(0,0,0,0));
+		deleteButton.setIcon(IconLib.iconDelete_sm);   
+		deleteButton.setSelectedIcon(IconLib.iconAddSubPackage);   
+		deleteButton.setBorder(BorderFactory.createEtchedBorder());
+		deleteButton.setBackground(new Color(238,238,238));
+		deleteButton.setToolTipText("Delete");
+		
+		try{
+    		MessageMap.mapAction(deleteButton, new OnDeletionHandler(vref), "onDelete") ;
+	    }
+	    catch(Exception ex){}
+	    
+		return deleteButton;
+    }
+    
     public JTextArea addProperty(String attr, String value)
     {
         JLabel label = new JLabel(attr) ;
         JTextArea v = new JTextArea(value) ;
-        mainPane.addItem(label, v) ;
+
+        JPanel p = new JPanel();
+        p.add(createDeleteButton(v));
+        JComboBox cb = makeComboBox();
+        cb.setEnabled(false);
+        p.add(cb);
+        
+        
+        mainPane.addItem(p, v) ;
         allItem.put(v, label) ;
         return v ;
     }
@@ -189,7 +244,7 @@ public class TermPropertyPanel extends JPanel implements MessageHandler
     {
         try
         {
-            MessageMap.mapAction(this.btnConfirm, this, "onConfirm") ;
+        	MessageMap.mapAction(this.btnConfirm, this, "onConfirm") ;
             MessageMap.mapAction(this.btnCancel, this, "onCancel") ;
             MessageMap.mapAction(this.btnAdd, this, "onAdd") ;
         }
@@ -230,14 +285,24 @@ public class TermPropertyPanel extends JPanel implements MessageHandler
             if(value != null && value.length() > 0)
             {
                 // JDBCUtils:insertOrUpdateDatabase() -  insert with null primary key
-
-                String attr = getLabel(item) ;
-                OntologyEdit.addTermProperty(db, term_oid, attr, value,
-                    MOEditor.user.name) ;
-                allItem.get(item).setEnabled(false) ;
+            	if(deletedItems.contains(item)){
+            		if(!newItems.contains(item)){
+	        			// Delete Item
+	        			OntologyEdit.deleteTermProperty(db,term_oid,getLabel(item));
+            		}
+            		
+            	}else{
+            	    String attr = getLabel(item) ;
+	                OntologyEdit.addTermProperty(db, term_oid, attr, value,
+	                    MOEditor.user.name) ;
+	                allItem.get(item).setEnabled(false) ;
+            	}
             }
         }
-
+    }
+    
+    public void deleteTermProperty(){
+    	   	
     }
 
     public void onCancel(ActionEvent e)

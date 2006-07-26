@@ -25,9 +25,11 @@ import edu.iastate.utils.tree.TypedNode;
  */
 public class PackageNode extends ATOTreeNode
 {
-    private DbPackage thisPackage ;
-    public boolean expanded = false ;
+    private DbPackage thisPackage;
+    public boolean expanded = false;
     public MetaTreeNode obsoleteNodes ;
+    public boolean editing = false;
+    public boolean wasEdited = false;
 
     public void markDeleted()
     {
@@ -89,7 +91,12 @@ public class PackageNode extends ATOTreeNode
 
     int max = 200 ;
 
-    public void expand(Connection db, JProgressBar progress)
+    
+    public void expand(Connection db, JProgressBar progress){
+    	expand(db, progress, true);
+    }
+    
+    public void expand(Connection db, JProgressBar progress, boolean reload)
     {
         if(this.status == ATOTreeNode.DELETED_NODE)
         {
@@ -117,23 +124,32 @@ public class PackageNode extends ATOTreeNode
         }
         //}}
         //String packageName = packageNode.getLocalName();
-        clearPackage() ;
+        if( reload == true ){
+        	clearPackage();
+        }
+        
         updateTermNumber(db) ;
 
         treeLoader = new Term2Tree(db, getViewMode(), true) ;
         treeLoader.setProgress(progress) ;
 
-        StopWatch w = new StopWatch() ;
-        w.start() ;
-        treeLoader.makeDagFromRootsQuick(this, cutoff, true, this) ;
-        //treeLoader.makeDagFromRoots(this, cutoff, true, this) ;
-        w.stop();
-        System.out.println(w.print());
+        if( reload == true ){
+	        StopWatch w = new StopWatch() ;
+	        w.start() ;
+	        	treeLoader.makeDagFromRootsQuick(this, cutoff, true, this) ;
+	        
+	        //treeLoader.makeDagFromRoots(this, cutoff, true, this) ;
+	        w.stop();
+	        System.out.println(w.print());
+        }
 
         // make the Obsolete meta node
-        int n = OntologyQuerier.getObsoleteTermCount(db, this) ;
-        obsoleteNodes = new MetaTreeNode("Obsolete(" + n + ")", null) ;
-        this.add(obsoleteNodes) ;
+
+        if( reload == true ){
+	        int n = OntologyQuerier.getObsoleteTermCount(db, this) ;
+	        obsoleteNodes = new MetaTreeNode("Obsolete(" + n + ")", null) ;
+	        this.add(obsoleteNodes) ;
+        }
         // load all obsoleteNodes
         //treeLoader.addObsoleteTerms(obsoleteNodes, this) ;
         expanded = true ;

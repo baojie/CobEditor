@@ -37,6 +37,7 @@ public abstract class ATOTreeNode extends DBTreeNode
     static public final short DELETED_NODE = 2 ;
     static public final short DELETED_UPEDGE = 3 ;
     static public final short MERGED = 4 ;
+    //static public final short NEW_NODE = 5 ;
 
     public String status2string()
     {
