@@ -124,6 +124,8 @@ public class PackageView2Db
             // save a package
             if(atoNode instanceof PackageNode)
             {
+            	PackageNode pn = ((PackageNode)atoNode);
+            	//System.out.println("\nDeleting Package: "+pn.getLocalName());
                 // delete package (don't delete the terms in it)
                 // (the terms should have individual deleted marks)
                 String pkg_oid = ((PackageNode)node).getOid() ;
@@ -318,6 +320,7 @@ public class PackageView2Db
         // save node change
         for(PackageNode pkg : allPackages)
         {
+        	//System.out.println("Saving: "+pkg.getLocalName());
         	savePackageNode(pkg);
         }
         // save edge change

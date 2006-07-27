@@ -27,6 +27,7 @@ import edu.iastate.ato.po.OntologyEdit ;
 import edu.iastate.ato.po.OntologyQuerier ;
 import edu.iastate.ato.po.OntologySchema ;
 import edu.iastate.ato.po.TagValuePair ;
+import edu.iastate.ato.po.naming.AutomaticNamingPolicy;
 import edu.iastate.ato.shared.IconLib ;
 import edu.iastate.ato.tree.DbTermNode ;
 import edu.iastate.ato.tree.PackageNode;

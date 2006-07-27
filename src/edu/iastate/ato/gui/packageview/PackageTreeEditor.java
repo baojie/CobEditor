@@ -239,20 +239,25 @@ public class PackageTreeEditor extends PackageTreeEditorBasis
                             IconLib.iconDeleteRelation,
                             new DeleteTermRelationAction(theTerm)) ;
                     }
-                    if(isLeaf && !isMerged)
-                    {
-                        if(!isCloned)
-                        {
-                            addMenuItem("Delete Term", IconLib.iconDelete,
-                                new DeleteTermAction(theTerm)) ;
-
-                            String info =
-                                "Drag the term and drop it on the term to be merged" ;
-                            addMenuItem("Merge Term with...",
-                                IconLib.iconMergeTerm,
-                                new DoNothingAction(theTerm, info)) ;
-                        }
+                    if( !isMerged && !isCloned){
+	                    if(isLeaf)
+	                    {
+	                            addMenuItem("Delete Term", IconLib.iconDelete,
+	                                new DeleteTermAction(theTerm)) ;
+	
+	                            String info =
+	                                "Drag the term and drop it on the term to be merged" ;
+	                            addMenuItem("Merge Term with...",
+	                                IconLib.iconMergeTerm,
+	                                new DoNothingAction(theTerm, info)) ;
+	                            
+	                    // Add Branch Relation Delete 
+	                    }else{
+                            addMenuItem("Delete Branch Relations", IconLib.iconDelete,
+                                new DeleteRelationBranchAction(theTerm)) ;
+	                    }
                     }
+                    
                 }
             } // end of if (!isObsolete)
         }
@@ -666,6 +671,39 @@ public class PackageTreeEditor extends PackageTreeEditorBasis
             ((PackageTree)tree).modified = true;
         }
     }
+    
+    class DeleteRelationBranchAction extends DefaultDeleteAction
+    {
+        DbTermNode theNode ;
+
+        public DeleteRelationBranchAction(DbTermNode theNode)
+        {
+            this.theNode = theNode ;
+        }
+
+        private void deleteRelationRec(DbTermNode tn){
+        	tn.status = ATOTreeNode.DELETED_UPEDGE ;
+        	for(int i=0; i<tn.getChildCount(); ++i){
+        		if( tn.getChildAt(i) instanceof DbTermNode){
+        			deleteRelationRec((DbTermNode)tn.getChildAt(i));
+        		}
+        	}
+        }
+        
+        /* (non-Javadoc)
+         * @see java.awt.event.ActionListener#actionPerformed(java.awt.event.ActionEvent)
+         */
+        public void actionPerformed(ActionEvent e)
+        {
+            theNode.status = ATOTreeNode.DELETED_UPEDGE ;
+            theNode.getHomePackageNode().status = PackageNode.MODIFIED;
+            
+            deleteRelationRec(theNode);
+            
+            tree.getModel().reload(theNode) ;
+            ((PackageTree)tree).modified = true;
+        }
+    }
 
     class DeletePackageAction extends DefaultDeleteAction
     {
@@ -675,26 +713,50 @@ public class PackageTreeEditor extends PackageTreeEditorBasis
         {
             this.theNode = theNode ;
         }
-
+        
+        
+        private void deletePackageRec(PackageNode tn){
+        	tn.markDeleted();
+        	for(int i=0; i<tn.getChildCount(); ++i){
+        		if( tn.getChildAt(i) instanceof PackageNode){
+        			deletePackageRec((PackageNode)tn.getChildAt(i));
+        		}
+        	}
+        }
+        
         public void actionPerformed(ActionEvent e)
         {
 
             if(theNode.hasSubPackage())
             {
-                Debug.trace("Cannot delete a package with sub packages. \n" +
+            	/*Debug.trace("Cannot delete a package with sub packages. \n" +
                     "Please delete all sub packages and try again") ;
+            	*/
+            	
+            	int answer = JOptionPane.showConfirmDialog(null,
+    	                "Are you sure to delete (obsolete) all terms(inclued unexpanded) in the package and subpackages? \n" +
+    	                "The package and subpackges themselves will be deleted only if it has no term (including obsoleted terms)") ;
+	            if(answer == JOptionPane.YES_OPTION)
+	            {
+	                theNode.markDeleted() ;
+	                ((PackageNode)theNode.getParent()).status = PackageNode.MODIFIED;
+	                deletePackageRec(theNode);
+	                tree.getModel().reload(theNode.getParent()) ;
+	                ((PackageTree)tree).modified = true;
+	            }
                 return ;
-            }
-
-            int answer = JOptionPane.showConfirmDialog(null,
-                "Are you sure to delete (obsolete) all terms(inclued unexpanded) in the package? \n" +
-                "The package itself will be deleted only if it has no term (including obsoleted terms)") ;
-            if(answer == JOptionPane.YES_OPTION)
-            {
-                theNode.markDeleted() ;
-                ((PackageNode)theNode.getParent()).status = PackageNode.MODIFIED;
-                tree.getModel().reload(theNode.getParent()) ;
-                ((PackageTree)tree).modified = true;
+                
+            }else{
+	            int answer = JOptionPane.showConfirmDialog(null,
+	                "Are you sure to delete (obsolete) all terms(inclued unexpanded) in the package? \n" +
+	                "The package itself will be deleted only if it has no term (including obsoleted terms)") ;
+	            if(answer == JOptionPane.YES_OPTION)
+	            {
+	                theNode.markDeleted() ;
+	                ((PackageNode)theNode.getParent()).status = PackageNode.MODIFIED;
+	                tree.getModel().reload(theNode.getParent()) ;
+	                ((PackageTree)tree).modified = true;
+	            }
             }
         }
     }

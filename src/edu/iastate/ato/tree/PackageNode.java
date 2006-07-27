@@ -42,7 +42,7 @@ public class PackageNode extends ATOTreeNode
         }
 
         //move all its subpackages to its super package
-        PackageNode superPkg = (PackageNode)this.getParent() ;
+        /*PackageNode superPkg = (PackageNode)this.getParent() ;
         for(int i = 0 ; i < this.getChildCount() ; i++)
         {
             TypedNode n = (TypedNode)this.getChildAt(i) ;
@@ -51,7 +51,7 @@ public class PackageNode extends ATOTreeNode
                 superPkg.add(n) ;
                 ((PackageNode)n).status = PackageNode.MODIFIED ;
             }
-        }
+        }*/
     }
 
     // 2005-08-10
