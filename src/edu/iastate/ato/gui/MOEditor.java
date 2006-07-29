@@ -2,6 +2,7 @@ package edu.iastate.ato.gui ;
 
 import java.io.IOException ;
 import java.util.Enumeration ;
+import java.util.HashSet;
 import java.util.Vector ;
 
 import java.awt.BorderLayout ;
@@ -653,8 +654,12 @@ public class MOEditor extends MOEditorGui implements MessageHandler
     // 2005-08-22
     public void onReload(ActionEvent e)
     {
-        paneMain.rebuild(conn.db) ;
+        //HashSet<PackageNode>
+    	HashSet<String> eps = paneMain.packageView.treeEditor.getEditingPackageOIDs();
+        paneMain.packageView.treeEditor.quitEditingAll();
+    	paneMain.rebuild(conn.db) ;
         this.paneDetails.rebuild(conn.db) ;
+        paneMain.packageView.treeEditor.beginEditing(eps);
     }
 
     // 2005-08-21

@@ -2,7 +2,8 @@ package edu.iastate.ato.gui.packageview ;
 
 import java.sql.Connection ;
 import java.util.Enumeration ;
-import java.util.Vector ;
+import java.util.HashSet;
+import java.util.Vector;
 
 import edu.iastate.ato.gui.MOEditor ;
 import edu.iastate.ato.po.OntologyQuerier ;
@@ -26,8 +27,11 @@ public class PackageTree extends TypedTree
     public PackageTree(Connection db)
     {
         this.db = db ;
+        
     }
-
+    
+    
+    
     /**
      * AddTerm
      *
@@ -104,6 +108,10 @@ public class PackageTree extends TypedTree
         }
         return null ;
     }
+    
+    
+
+   
 
     /**
      * Cancel editing for a set of packages

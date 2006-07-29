@@ -1,6 +1,7 @@
 package edu.iastate.ato.gui.packageview ;
 
 import java.sql.Connection ;
+import java.util.HashSet;
 import java.util.Vector ;
 
 import java.awt.HeadlessException ;
@@ -40,7 +41,9 @@ import edu.iastate.utils.tree.TypedTreeEditor;
 public class PackageTreeEditor extends PackageTreeEditorBasis
 {
     PackageTree thisTree ;
-
+    HashSet<String> editingPkg_OIDs = new HashSet<String>();
+    HashSet<PackageNode> editingPkgs = new HashSet<PackageNode>();
+    
     public PackageTreeEditor(PackageTree tree, Connection db)
     {
         this.tree = tree ;
@@ -48,6 +51,14 @@ public class PackageTreeEditor extends PackageTreeEditorBasis
         this.db = db ;
     }
 
+    public HashSet<String> getEditingPackageOIDs(){
+    	HashSet<String> rtnVal = new HashSet<String>();
+    	for(String s:editingPkg_OIDs){
+    		rtnVal.add(s);
+    	}
+    	return rtnVal;
+    }
+    
     protected void buildContextMenu(TypedNode selectedNode)
     {
         ATOTreeNode theNode = (ATOTreeNode)selectedNode ;
@@ -550,6 +561,12 @@ public class PackageTreeEditor extends PackageTreeEditorBasis
         }
     }
 
+    public void quitEditingAll(){
+    	for(PackageNode n:this.editingPkgs){
+    		quitEditing(n);
+    	}
+    }
+    
     public void quitEditing(PackageNode thePackageNode)
     {
     	int answer = -1;
@@ -564,6 +581,10 @@ public class PackageTreeEditor extends PackageTreeEditorBasis
     	if(answer != JOptionPane.CANCEL_OPTION || answer == -1){
         	thePackageNode.editing = false;
     		thePackageNode.expanded = false; 
+    		
+    		editingPkg_OIDs.remove(thePackageNode.getOid());
+    		editingPkgs.remove(thePackageNode);
+    		
         	UserManager.cancelEditing(db, thePackageNode.getOid(),
                     MOEditor.user.name) ;
                 thePackageNode.setReadOnly(true) ;
@@ -590,6 +611,24 @@ public class PackageTreeEditor extends PackageTreeEditorBasis
         }
     }
 
+    /**
+     * Begin editing for a set of packages
+     * @param packages Vector - set of package oid
+     * @since 2005-07-25
+     */
+    public void beginEditing(HashSet<String> pkg_oids)
+    {
+        // search packages
+        Vector<PackageNode> e =  thisTree.getAllPackage();
+        for(PackageNode n : e)
+        {
+            if(pkg_oids.contains(n.getOid())){
+            	editPackage(n);
+            }
+        }
+    }
+    
+    
     public void editPackage(PackageNode node)
     {
         // check if the package is under editing
@@ -609,6 +648,9 @@ public class PackageTreeEditor extends PackageTreeEditorBasis
         if(suc)
         {
             node.editing = true;
+            editingPkg_OIDs.add(node.getOid());
+    		editingPkgs.add(node);
+            
         	Debug.trace("You can edit terms in package '" +
                 node.getLocalName() + "'") ;
             //System.out.println("EditPackageAction: " + suc);
