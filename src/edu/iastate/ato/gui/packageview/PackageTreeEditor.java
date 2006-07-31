@@ -2,6 +2,7 @@ package edu.iastate.ato.gui.packageview ;
 
 import java.sql.Connection ;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.Vector ;
 
 import java.awt.HeadlessException ;
@@ -43,6 +44,8 @@ public class PackageTreeEditor extends PackageTreeEditorBasis
     PackageTree thisTree ;
     HashSet<String> editingPkg_OIDs = new HashSet<String>();
     HashSet<PackageNode> editingPkgs = new HashSet<PackageNode>();
+    boolean isQuitEditingAll = false;
+    boolean isBeginEditing =true;
     
     public PackageTreeEditor(PackageTree tree, Connection db)
     {
@@ -562,9 +565,13 @@ public class PackageTreeEditor extends PackageTreeEditorBasis
     }
 
     public void quitEditingAll(){
-    	for(PackageNode n:this.editingPkgs){
-    		quitEditing(n);
+    	Iterator<PackageNode> it = this.editingPkgs.iterator();
+    	isQuitEditingAll = true;
+    	while(it.hasNext()){
+    		quitEditing(it.next());
     	}
+    	editingPkgs.clear();
+    	isQuitEditingAll = false;
     }
     
     public void quitEditing(PackageNode thePackageNode)
@@ -583,7 +590,9 @@ public class PackageTreeEditor extends PackageTreeEditorBasis
     		thePackageNode.expanded = false; 
     		
     		editingPkg_OIDs.remove(thePackageNode.getOid());
-    		editingPkgs.remove(thePackageNode);
+    		if(!isQuitEditingAll){
+    			editingPkgs.remove(thePackageNode);
+    		}
     		
         	UserManager.cancelEditing(db, thePackageNode.getOid(),
                     MOEditor.user.name) ;
@@ -620,12 +629,14 @@ public class PackageTreeEditor extends PackageTreeEditorBasis
     {
         // search packages
         Vector<PackageNode> e =  thisTree.getAllPackage();
+        isBeginEditing = true;
         for(PackageNode n : e)
         {
             if(pkg_oids.contains(n.getOid())){
             	editPackage(n);
             }
         }
+        isBeginEditing = false;
     }
     
     
@@ -651,7 +662,8 @@ public class PackageTreeEditor extends PackageTreeEditorBasis
             editingPkg_OIDs.add(node.getOid());
     		editingPkgs.add(node);
             
-        	Debug.trace("You can edit terms in package '" +
+        	if( !isBeginEditing )
+        		Debug.trace("You can edit terms in package '" +
                 node.getLocalName() + "'") ;
             //System.out.println("EditPackageAction: " + suc);
             node.setReadOnly(false) ;
