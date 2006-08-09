@@ -38,7 +38,7 @@ public class MOEditorBasis extends JPanel
 
         ds.setUrl(info.url) ;
         ds.setUser(info.user) ;
-        ds.setPassword(info.password) ;
+        ds.setPassword(info.password);
         ds.setDriver(info.driver) ;
 
         if(!ds.connect())
@@ -55,7 +55,7 @@ public class MOEditorBasis extends JPanel
     protected void prepareNamingPolicy(Connection db)
     {
         // naming policy
-        selectedNamingPolicy = new BasicNamingPolicy() ;
+        selectedNamingPolicy = new BasicNamingPolicy(db) ;
 
         // load the system selected policy
         String policy = OntologySchema.getNamingPolicy(conn.db) ;

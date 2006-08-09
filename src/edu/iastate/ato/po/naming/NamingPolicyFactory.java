@@ -13,7 +13,7 @@ public class NamingPolicyFactory
     public static Vector<NamingPolicy> getAllNamingPolicy(Connection db)
     {
         Vector<NamingPolicy> allNamingPolicy = new Vector() ;
-        allNamingPolicy.add(new BasicNamingPolicy()) ;
+        allNamingPolicy.add(new BasicNamingPolicy(db)) ;
         allNamingPolicy.add(new AutomaticNamingPolicy(db)) ;
 
         return allNamingPolicy ;
@@ -24,7 +24,7 @@ public class NamingPolicyFactory
     {
         if(name.equals(BasicNamingPolicy.policyName))
         {
-            return new BasicNamingPolicy() ;
+            return new BasicNamingPolicy(db) ;
         }
         else if(name.equals(AutomaticNamingPolicy.policyName))
         {

@@ -1,5 +1,9 @@
 package edu.iastate.ato.po.naming ;
 
+import java.sql.Connection;
+
+import edu.iastate.ato.po.OntologyEdit;
+
 /**
  * <p>@author Jie Bao</p>
  * <p>@since 2005-08-17</p>
@@ -8,8 +12,12 @@ public class BasicNamingPolicy extends NamingPolicy
 {
     public static String policyName = "Basic Naming Policy" ;
 
-    public BasicNamingPolicy()
+    Connection db ;
+
+    
+    public BasicNamingPolicy(Connection db)
     {
+    	this.db = db;
         enableRename = true ;
         uniqueRequired = true ;
     }
@@ -35,6 +43,7 @@ public class BasicNamingPolicy extends NamingPolicy
      */
     public String makeNameWhenSaving(String baseName)
     {
+    	OntologyEdit.applyID(db, baseName);
         return baseName ;
     }
 
