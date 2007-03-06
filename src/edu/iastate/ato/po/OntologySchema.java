@@ -180,4 +180,11 @@ public class OntologySchema
         return Utility.Array2Vector(sys).contains(prop) ;
     }
 
+    static boolean isSynonymProperty(String prop)
+    {
+        String[] sys =
+            {"synonym", "related_synonym", "exact_synonym", "broad_synonym",
+            "narrow_synonym"} ;
+        return Utility.Array2Vector(sys).contains(prop) ;
+    }
 }

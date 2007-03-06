@@ -30,7 +30,7 @@ public class DB2OBO extends LongTask
     String makeHeader(String user)
     {
         String header = "format-version: 1.0\n" +
-            "date: " + OntologyEdit.getTime() + "\n" +
+            //"date: " + OntologyEdit.getTime() + "\n" +
             "saved-by: " + user + "\n" +
             "auto-generated-by: " + AtoConstent.APP_NAME + "\n" +
             "default-namespace: ato\n\n" ;
@@ -60,7 +60,19 @@ public class DB2OBO extends LongTask
     {
         if(OntologySchema.isOBOProperty(prop))
         {
-            return prop + ": " + value + "\n" ;
+        	if ("def".equals(prop.trim())){
+        		value = "\"" + value.replaceAll("\"","'") + "\"";
+        		return prop + ": " + value;
+        	}
+        	else if ("def_xref".equals(prop.trim()))
+        	{	return "[" +value + "]"; // also see exportTerms        	
+        	}
+        	else if (OntologySchema.isSynonymProperty(prop))       		
+        	{
+        		return prop + ": \"" + value + "\" []\n" ;
+        	}
+        	else
+        		return prop + ": " + value + "\n" ;
         }
         else
         { // treate it as comment
@@ -274,6 +286,9 @@ public class DB2OBO extends LongTask
                     oid + "'" ;
                 Statement stmt1 = db.createStatement() ;
                 ResultSet resultSet1 = stmt1.executeQuery(sql) ;
+                
+                String def = null, def_xref = null;
+                
                 while(resultSet1.next())
                 {
                     String attribute = resultSet1.getString("attribute") ;
@@ -282,26 +297,46 @@ public class DB2OBO extends LongTask
                     if(value != null && value.trim().length() > 0)
                     {
                         str = makeTerm_Property(attribute, value) ;
+                        
+                        if ("def_xref".equals(attribute.trim()))
+                        	def_xref = str;
+                        else if ("def".equals(attribute.trim())) 
+                        	def = str;
+                        else
+                        
                         out.write(str) ;
                     }
                 }
-
+                if (def != null)
+                {
+                	if (def_xref != null)
+                	{
+                		out.write(def + " " + def_xref + "\n");
+                	}
+                	else
+                	{
+                		out.write(def + "\n");
+                	}
+                	//out.write("def is not null \n") ;
+                }
                 //SELECT DISTINCT relation, term.id AS parent, term.name AS parent_name
                 //FROM relation WHERE id = '59056' AND relation.pid = term.oid
                 sql =
-                    "SELECT DISTINCT relation, term.id AS parent, term.name AS parent_name FROM relation " +
-                    "WHERE id = '" + oid + "' AND relation.pid = term.oid" ;
+                    "SELECT DISTINCT relation, term.id AS parent, term.name AS parent_name FROM relation, term " +
+                    "WHERE relation.id = '" + oid + "' AND relation.pid = term.oid" ;
                 Statement stmt2 = db.createStatement() ;
                 ResultSet resultSet2 = stmt2.executeQuery(sql) ;
+                
                 while(resultSet2.next())
-                {
+                {                	
                     String relation = resultSet2.getString("relation") ;
                     String parent = resultSet2.getString("parent") ;
                     String parent_name = resultSet2.getString("parent_name") ;
 
                     str = makeTerm_Relation(relation, parent, parent_name) ;
-                    out.write(str) ;
+                   	out.write( str) ;
                 }
+
                 out.write("\n") ;
 
             }
