@@ -1022,7 +1022,7 @@ public class PackageTreeEditor extends PackageTreeEditorBasis
 
         public void actionPerformed(ActionEvent e)
         {
-            // same as expand
+            // same as expand            
             expandPackage(theNode) ;
         }
     }

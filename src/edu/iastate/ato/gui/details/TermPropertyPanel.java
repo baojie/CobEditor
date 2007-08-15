@@ -138,7 +138,8 @@ public class TermPropertyPanel extends JPanel implements MessageHandler
         JPanel p = new JPanel();
         p.add(createDeleteButton(v));
         JComboBox cb = makeComboBox();
-        cb.setEnabled(false);
+        cb.setEnabled(true);
+        cb.setSelectedItem(attr);
         p.add(cb);
         
         
