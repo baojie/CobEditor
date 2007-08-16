@@ -1,17 +1,18 @@
-package edu.iastate.ato.po ;
+package edu.iastate.ato.po;
 
-import java.io.BufferedWriter ;
-import java.io.FileWriter ;
-import java.io.IOException ;
-import java.sql.Connection ;
-import java.sql.ResultSet ;
-import java.sql.SQLException ;
-import java.sql.Statement ;
-import java.util.HashMap ;
-import java.util.Map ;
-import java.util.Vector ;
+import java.io.BufferedWriter;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.sql.Connection;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.Statement;
+import java.text.SimpleDateFormat;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Vector;
 
-import edu.iastate.ato.shared.AtoConstent ;
 import edu.iastate.ato.shared.*;
 
 /**
@@ -22,74 +23,76 @@ import edu.iastate.ato.shared.*;
  */
 public class DB2OBO extends LongTask
 {
-    public static final String PROPERTY_LEADING = "![attribute]" ;
-    public static final String SCHEMA_LEADING = "![schema]" ;
+    public static final String           PROPERTY_LEADING = "![attribute]";
+    public static final String           SCHEMA_LEADING   = "![schema]";
 
-    String prefix ;
+    //date: 15:08:2007 22:12
+    final public static SimpleDateFormat dateFormat       = new SimpleDateFormat(
+                                                              "dd:MM:yyyy HH:mm");
+
+    public static String getTime()
+    {
+        return dateFormat.format(new Date());
+    }
+
+    String prefix;
 
     String makeHeader(String user)
     {
-        String header = "format-version: 1.0\n" +
-            //"date: " + OntologyEdit.getTime() + "\n" +
-            "saved-by: " + user + "\n" +
-            "auto-generated-by: " + AtoConstent.APP_NAME + "\n" +
-            "default-namespace: ato\n\n" ;
-        return header ;
+        String header = "format-version: 1.0\n" + "date: "
+            + getTime() + "\n" + "saved-by: " + user + "\n"
+            + "auto-generated-by: " + AtoConstent.APP_NAME + "\n"
+            + "default-namespace: ato\n\n";
+        return header;
     }
 
     /* eg
-         [Typedef]
-         id: part_of
-         name: part of
+     [Typedef]
+     id: part_of
+     name: part of
      */
     String makeTypedef(String relation)
     {
-        return "[Typedef]\n" +
-            "id: " + relation + "\n" +
-            "name: " + relation + "\n\n" ;
+        return "[Typedef]\n" + "id: " + relation + "\n" + "name: " + relation
+            + "\n\n";
     }
 
     String makeComment(String comment)
     {
-        return "comment: " + comment + "\n" ;
+        return "comment: " + comment + "\n";
     }
 
     //unit: cm
     // @see TagValuePair.parseXref(), OBO2DB.addTermEntry()
     String makeTerm_Property(String prop, String value)
     {
-        if(OntologySchema.isOBOProperty(prop))
+        if (OntologySchema.isOBOProperty(prop))
         {
-        	if ("def".equals(prop.trim())){
-        		value = "\"" + value.replaceAll("\"","'") + "\"";
-        		return prop + ": " + value;
-        	}
-        	else if ("def_xref".equals(prop.trim()))
-        	{	return "[" +value + "]"; // also see exportTerms        	
-        	}
-        	else if (OntologySchema.isSynonymProperty(prop))       		
-        	{
-        		return prop + ": \"" + value + "\" []\n" ;
-        	}
-        	else
-        		return prop + ": " + value + "\n" ;
+            if (prop.contains("synonym") || prop.equals("def"))
+            {
+                // e.g. related_synonym: "aa" []
+                value = value.replaceAll("\"", "");
+                return prop + ": \"" + value + "\" []\n";
+            }
+            else
+            return prop + ": " + value + "\n";
         }
         else
         { // treate it as comment
-            return PROPERTY_LEADING + prop + ": " + value + "\n" ;
+            return PROPERTY_LEADING + prop + ": " + value + "\n";
         }
     }
 
     // 2005-08-24
     public String addPrefix(String id)
     {
-        if(prefix != null && prefix.trim().length() > 0)
+        if (prefix != null && prefix.trim().length() > 0)
         {
-            return prefix + ":" + id ;
+            return prefix + ":" + id;
         }
         else
         {
-            return id ;
+            return id;
         }
     }
 
@@ -97,24 +100,24 @@ public class DB2OBO extends LongTask
     String makeTerm_Relation(String relation, String parent_id,
         String parent_name)
     {
-        String str = "relationship: " + relation + " " + addPrefix(parent_id) ;
-        if(parent_name != null)
+        String str = "relationship: " + relation + " " + addPrefix(parent_id);
+        if (parent_name != null)
         {
-            str += " ! " + parent_name ;
+            str += " ! " + parent_name;
         }
-        return str + "\n" ;
+        return str + "\n";
     }
 
     // 2005-08-24
     String makePackageRelation(String relation, String parent_id,
         String parent_name)
     {
-        String str = "relationship: " + relation + " " + parent_id ;
-        if(parent_name != null)
+        String str = "relationship: " + relation + " " + parent_id;
+        if (parent_name != null)
         {
-            str += " ! " + parent_name ;
+            str += " ! " + parent_name;
         }
-        return str + "\n" ;
+        return str + "\n";
     }
 
     /**
@@ -129,29 +132,28 @@ public class DB2OBO extends LongTask
 
         try
         {
-            BufferedWriter out = new BufferedWriter(new FileWriter(fileName)) ;
+            BufferedWriter out = new BufferedWriter(new FileWriter(fileName));
 
             // prepare data structures
-            this.prefix = withPrefix ? OntologySchema.getPrefix(db) : null ;
-            packageNameCache.clear() ;
+            this.prefix = withPrefix ? OntologySchema.getPrefix(db) : null;
+            packageNameCache.clear();
 
             // 1.  make header
-            out.write(makeHeader(user)) ;
+            out.write(makeHeader(user));
 
             // 2. make schema
-            exportSchema(db, out) ;
+            exportSchema(db, out);
 
             // 3. export package
-            exportPackages(db, out) ;
+            exportPackages(db, out);
 
             // 4. write term by term
-            exportTerms(db, out) ;
+            exportTerms(db, out);
 
-            out.close() ;
+            out.close();
         }
-        catch(IOException ex)
-        {
-        }
+        catch (IOException ex)
+        {}
     }
 
     /**
@@ -161,235 +163,213 @@ public class DB2OBO extends LongTask
      * @param out BufferedWriter
      * @since 2005-08-24
      */
-    private void exportPackages(Connection db, BufferedWriter out) throws
-        IOException
+    private void exportPackages(Connection db, BufferedWriter out)
+            throws IOException
     {
-        String sql = "SELECT oid, pid, comment, author, modified FROM package" ;
+        String sql = "SELECT oid, pid, comment, author, modified FROM package";
         try
         {
-            Statement stmt = db.createStatement() ;
-            ResultSet resultSet = stmt.executeQuery(sql) ;
+            Statement stmt = db.createStatement();
+            ResultSet resultSet = stmt.executeQuery(sql);
 
-            while(resultSet.next())
+            while (resultSet.next())
             {
-                String oid = resultSet.getString("oid") ;
-                String pid = resultSet.getString("pid") ;
-                String comment = resultSet.getString("comment") ;
-                String author = resultSet.getString("author") ;
-                String modified = resultSet.getString("modified") ;
+                String oid = resultSet.getString("oid");
+                String pid = resultSet.getString("pid");
+                String comment = resultSet.getString("comment");
+                String author = resultSet.getString("author");
+                String modified = resultSet.getString("modified");
 
                 // don't export GlobalPackage
-                if(pid.equals(Package.GlobalPkg))
+                if (pid.equals(Package.GlobalPkg))
                 {
-                    continue ;
+                    continue;
                 }
 
-                out.write("[Package]\n") ;
+                out.write("[Package]\n");
                 // write the comments
-                String str = "id: " + pid + "\n" ;
-                str += "name: " + (comment == null ? "" : comment) + "\n" ;
-                out.write(str) ;
-                str = makeTerm_Property("author", author) ;
-                out.write(str) ;
-                str = makeTerm_Property("modified", modified) ;
-                out.write(str) ;
+                String str = "id: " + pid + "\n";
+                str += "name: " + (comment == null ? "" : comment) + "\n";
+                out.write(str);
+                str = makeTerm_Property("author", author);
+                out.write(str);
+                str = makeTerm_Property("modified", modified);
+                out.write(str);
 
                 //SELECT DISTINCT relation, package.pid AS parent, package.comment AS parent_name
                 //FROM pkg_relation, package WHERE pkg_relation.p1 = '116329' AND pkg_relation.p2 = package.oid
 
-                sql =
-                    "SELECT DISTINCT relation, package.pid AS parent, package.comment AS parent_name" +
-                    " FROM pkg_relation, package WHERE pkg_relation.p1 = '" +
-                    oid + "' AND pkg_relation.p2 = package.oid" ;
+                sql = "SELECT DISTINCT relation, package.pid AS parent, package.comment AS parent_name"
+                    + " FROM pkg_relation, package WHERE pkg_relation.p1 = '"
+                    + oid + "' AND pkg_relation.p2 = package.oid";
                 //Debug.systrace(this,sql);
-                Statement stmt2 = db.createStatement() ;
-                ResultSet resultSet2 = stmt2.executeQuery(sql) ;
-                while(resultSet2.next())
+                Statement stmt2 = db.createStatement();
+                ResultSet resultSet2 = stmt2.executeQuery(sql);
+                while (resultSet2.next())
                 {
-                    String relation = resultSet2.getString("relation") ;
-                    String parent = resultSet2.getString("parent") ;
-                    String parent_name = resultSet2.getString("parent_name") ;
+                    String relation = resultSet2.getString("relation");
+                    String parent = resultSet2.getString("parent");
+                    String parent_name = resultSet2.getString("parent_name");
 
-                    str = makePackageRelation(relation, parent, parent_name) ;
-                    out.write(str) ;
+                    str = makePackageRelation(relation, parent, parent_name);
+                    out.write(str);
                 }
-                out.write("\n") ;
+                out.write("\n");
             } // end of a package
         }
-        catch(SQLException ex)
+        catch (SQLException ex)
         {
-            ex.printStackTrace() ;
+            ex.printStackTrace();
         }
 
     }
 
-    Map<String, String> packageNameCache = new HashMap() ;
+    Map<String, String> packageNameCache = new HashMap();
+
     private String getPackageName(Connection db, String pkg_oid)
     {
         // read the cache
-        String pkgName = packageNameCache.get(pkg_oid) ;
-        if(pkgName == null)
+        String pkgName = packageNameCache.get(pkg_oid);
+        if (pkgName == null)
         {
             // not yet in cache
-            pkgName = DbPackage.read(db, pkg_oid).pid ;
-            packageNameCache.put(pkg_oid, pkgName) ;
+            pkgName = DbPackage.read(db, pkg_oid).pid;
+            packageNameCache.put(pkg_oid, pkgName);
         }
-        return pkgName ;
+        return pkgName;
     }
 
     void exportTerms(Connection db, BufferedWriter out)
     {
-        String sql =
-            "SELECT oid, id, name, slm, package, author, modified, is_obsolete FROM term" ;
+        String sql = 
+            "SELECT oid, id, name, slm, package, author, modified, is_obsolete FROM term";
         try
         {
-            System.out.println(sql) ;
+            System.out.println(sql);
 
-            Statement stmt = db.createStatement() ;
-            ResultSet resultSet = stmt.executeQuery(sql) ;
+            Statement stmt = db.createStatement();
+            ResultSet resultSet = stmt.executeQuery(sql);
 
-            while(resultSet.next())
+            while (resultSet.next())
             {
-                String oid = resultSet.getString("oid") ;
-                String id = resultSet.getString("id") ;
-                String name = resultSet.getString("name") ;
-                String author = resultSet.getString("author") ;
-                String modified = resultSet.getString("modified") ;
-                String is_obsolete = resultSet.getString("is_obsolete") ;
-                String package_oid = resultSet.getString("package") ;
-                String slm = resultSet.getString("slm") ;
+                String oid = resultSet.getString("oid");
+                String id = resultSet.getString("id");
+                String name = resultSet.getString("name");
+                String author = resultSet.getString("author");
+                String modified = resultSet.getString("modified");
+                String is_obsolete = resultSet.getString("is_obsolete");
+                String package_oid = resultSet.getString("package");
+                String slm = resultSet.getString("slm");
 
-                out.write("[Term]\n") ;
+                out.write("[Term]\n");
 
                 // write the basic information
-                String str = "id: " + addPrefix(id) + "\n" ;
-                str += "name: " + (name == null ? "" : name) + "\n" ;
-                out.write(str) ;
-                if(is_obsolete.equalsIgnoreCase("true"))
+                String str = "id: " + addPrefix(id) + "\n";
+                str += "name: " + (name == null ? "" : name) + "\n";
+                out.write(str);
+                if (is_obsolete.equalsIgnoreCase("true"))
                 {
-                    str = "is_obsolete: true\n" ;
-                    out.write(str) ;
+                    str = "is_obsolete: true\n";
+                    out.write(str);
                 }
-                str = makeTerm_Property("author", author) ;
-                out.write(str) ;
-                str = makeTerm_Property("modified", modified) ;
-                out.write(str) ;
+                str = makeTerm_Property("author", author);
+                out.write(str);
+                str = makeTerm_Property("modified", modified);
+                out.write(str);
                 // write package membership
-                str = getPackageName(db, package_oid) ; // package id
-                str = makeTerm_Property("package", str) ;
-                out.write(str) ;
-                str = makeTerm_Property("slm", slm) ;
-                out.write(str) ;
+                str = getPackageName(db, package_oid); // package id
+                str = makeTerm_Property("package", str);
+                out.write(str);
+                str = makeTerm_Property("slm", slm);
+                out.write(str);
 
                 // write the property details
-                sql = "SELECT attribute, value FROM details WHERE term = '" +
-                    oid + "'" ;
-                Statement stmt1 = db.createStatement() ;
-                ResultSet resultSet1 = stmt1.executeQuery(sql) ;
-                
-                String def = null, def_xref = null;
-                
-                while(resultSet1.next())
+                sql = "SELECT attribute, value FROM details WHERE term = '"
+                    + oid + "'";
+                Statement stmt1 = db.createStatement();
+                ResultSet resultSet1 = stmt1.executeQuery(sql);
+                while (resultSet1.next())
                 {
-                    String attribute = resultSet1.getString("attribute") ;
-                    String value = resultSet1.getString("value") ;
+                    String attribute = resultSet1.getString("attribute");
+                    String value = resultSet1.getString("value");
 
-                    if(value != null && value.trim().length() > 0)
+                    if (value != null && value.trim().length() > 0)
                     {
-                        str = makeTerm_Property(attribute, value) ;
-                        
-                        if ("def_xref".equals(attribute.trim()))
-                        	def_xref = str;
-                        else if ("def".equals(attribute.trim())) 
-                        	def = str;
-                        else
-                        
-                        out.write(str) ;
+                        str = makeTerm_Property(attribute, value);
+                        out.write(str);
                     }
                 }
-                if (def != null)
-                {
-                	if (def_xref != null)
-                	{
-                		out.write(def + " " + def_xref + "\n");
-                	}
-                	else
-                	{
-                		out.write(def + "\n");
-                	}
-                	//out.write("def is not null \n") ;
-                }
+
                 //SELECT DISTINCT relation, term.id AS parent, term.name AS parent_name
-                //FROM relation WHERE id = '59056' AND relation.pid = term.oid
-                sql =
-                    "SELECT DISTINCT relation, term.id AS parent, term.name AS parent_name FROM relation, term " +
-                    "WHERE relation.id = '" + oid + "' AND relation.pid = term.oid" ;
-                Statement stmt2 = db.createStatement() ;
-                ResultSet resultSet2 = stmt2.executeQuery(sql) ;
-                
-                while(resultSet2.next())
-                {                	
-                    String relation = resultSet2.getString("relation") ;
-                    String parent = resultSet2.getString("parent") ;
-                    String parent_name = resultSet2.getString("parent_name") ;
+                //FROM relation,term WHERE relation.id = '59056' AND relation.pid = term.oid
+                sql = "SELECT DISTINCT relation, term.id AS parent, term.name AS parent_name FROM relation, term "
+                    + "WHERE relation.id = '"
+                    + oid
+                    + "' AND relation.pid = term.oid";
+                Statement stmt2 = db.createStatement();
+                ResultSet resultSet2 = stmt2.executeQuery(sql);
+                while (resultSet2.next())
+                {
+                    String relation = resultSet2.getString("relation");
+                    String parent = resultSet2.getString("parent");
+                    String parent_name = resultSet2.getString("parent_name");
 
-                    str = makeTerm_Relation(relation, parent, parent_name) ;
-                   	out.write( str) ;
+                    str = makeTerm_Relation(relation, parent, parent_name);
+                    out.write(str);
                 }
-
-                out.write("\n") ;
+                out.write("\n");
 
             }
         }
-        catch(Exception e)
+        catch (Exception e)
         {
-            e.printStackTrace() ;
+            e.printStackTrace();
         }
 
     }
 
     // 2005-08-23
-    private void exportSchema(Connection db, BufferedWriter out) throws
-        IOException
+    private void exportSchema(Connection db, BufferedWriter out)
+            throws IOException
     {
         // 1. write properties - if not obo property
-        Vector<String> props = OntologySchema.getTermProperties(db) ;
-        for(String attr : props)
+        Vector<String> props = OntologySchema.getTermProperties(db);
+        for (String attr : props)
         {
             // ![schema]term-property:unit
-            String str = SCHEMA_LEADING +
-                OntologySchema.TERM_PROPERTY + ":" + attr + "\n" ;
-            out.write(str) ;
+            String str = SCHEMA_LEADING + OntologySchema.TERM_PROPERTY + ":"
+                + attr + "\n";
+            out.write(str);
 
         }
         // 2. naming policy
-        String value = OntologySchema.getNamingPolicy(db) ;
-        if(value != null)
+        String value = OntologySchema.getNamingPolicy(db);
+        if (value != null)
         {
-            String str = SCHEMA_LEADING + OntologySchema.NAMING_POLICY + ":" +
-                value + "\n" ;
-            out.write(str) ;
+            String str = SCHEMA_LEADING + OntologySchema.NAMING_POLICY + ":"
+                + value + "\n";
+            out.write(str);
         }
 
         // 3. prefix
-        value = OntologySchema.getPrefix(db) ;
-        if(value != null)
+        value = OntologySchema.getPrefix(db);
+        if (value != null)
         {
-            String str = SCHEMA_LEADING + OntologySchema.PREFIX + ":" +
-                value + "\n" ;
-            out.write(str) ;
+            String str = SCHEMA_LEADING + OntologySchema.PREFIX + ":" + value
+                + "\n";
+            out.write(str);
         }
 
         // 4. a blank line
-        out.write("\n") ;
+        out.write("\n");
 
         // 5. write partial orders
         // write typedef like [Typedef]\n  id: part_of \n name: part of
-        Vector<String> relations = OntologySchema.getPartialOrders(db) ;
-        for(String relation : relations)
+        Vector<String> relations = OntologySchema.getPartialOrders(db);
+        for (String relation : relations)
         {
-            String str = makeTypedef(relation) ;
-            out.write(str) ;
+            String str = makeTypedef(relation);
+            out.write(str);
         }
 
     }
