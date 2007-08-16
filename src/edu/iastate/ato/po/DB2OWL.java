@@ -156,6 +156,7 @@ public class DB2OWL
                     String modified = resultSet.getString("modified") ;
                     String is_obsolete = resultSet.getString("is_obsolete") ;
 
+                    id = id.replace(" ", "_");
                     out.write("<Term rdf:ID=\"" + id + "\">\n") ;
 
                     // write the comments
@@ -189,18 +190,22 @@ public class DB2OWL
                         str = makeTerm_Property(attribute, value) ;
                         out.write(str) ;
                     }
-
-                    // SELECT DISTINCT relation, term.id AS parent FROM relation
-                    // WHERE id = '59056' AND relation.pid = term.oid
+                    
+                    // write parents
+                    //SELECT DISTINCT relation, term.id AS parent FROM relation,term 
+                    //WHERE relation.id = '27291' AND relation.pid = term.oid
+                    
                     sql =
-                        "SELECT DISTINCT relation, term.id AS parent FROM relation " +
-                        "WHERE id = '" + oid + "' AND relation.pid = term.oid" ;
+                        "SELECT DISTINCT relation, term.id AS parent FROM relation,term " +
+                        "WHERE relation.id = '" + oid + "' AND relation.pid = term.oid" ;
                     Statement stmt2 = db.createStatement() ;
                     ResultSet resultSet2 = stmt2.executeQuery(sql) ;
                     while(resultSet2.next())
                     {
-                        String relation = resultSet2.getString("relation") ;
+                        String relation = resultSet2.getString("relation");
                         String parent = resultSet2.getString("parent") ;
+                        parent = parent.replace(" ", "_");
+                        
 
                         str = makeTerm_Relation(relation, parent) ;
                         out.write(str) ;
